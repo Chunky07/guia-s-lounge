@@ -84,13 +84,13 @@
       border-radius: 1.5rem;
       padding: 1.5rem;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-      height: 450px;
+      height: 440px;
     }
 
     .canvas-wrapper {
       position: relative;
-      width: 400px;
-      height: 400px;
+      width: 390px;
+      height: 390px;
     }
 
     canvas {
@@ -222,16 +222,24 @@
       align-items: center;
       gap: 1rem;
       background: #0f172a;
-      padding: 1.25rem;
+      padding: 1rem 1.25rem;
       border-radius: 1rem;
       border: 2px solid #334155;
       box-shadow: inset 0 5px 15px rgba(0,0,0,0.6);
-      height: 110px;
+      height: 135px;
+    }
+
+    .jig-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      width: 120px;
     }
 
     .jig-slot {
-      width: 75px;
-      height: 75px;
+      width: 70px;
+      height: 70px;
       border-radius: 50%;
       background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
       border: 3px inset #334155;
@@ -240,6 +248,17 @@
       justify-content: center;
       position: relative;
       box-shadow: inset 0 4px 8px rgba(0,0,0,0.8);
+    }
+
+    .jig-label {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05rem;
+      height: 1.4rem;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .ball-item {
@@ -314,7 +333,7 @@
         </div>
 
         <div class="canvas-wrapper">
-          <canvas id="rouletteCanvas" width="400" height="400"></canvas>
+          <canvas id="rouletteCanvas" width="390" height="390"></canvas>
         </div>
       </div>
 
@@ -331,11 +350,11 @@
 
     <div class="tray-section">
       <div class="jig-container" id="jigContainer">
-        <div class="jig-slot"></div>
-        <div class="jig-slot"></div>
-        <div class="jig-slot"></div>
-        <div class="jig-slot"></div>
-        <div class="jig-slot"></div>
+        <div class="jig-item"><div class="jig-slot"></div><div class="jig-label"></div></div>
+        <div class="jig-item"><div class="jig-slot"></div><div class="jig-label"></div></div>
+        <div class="jig-item"><div class="jig-slot"></div><div class="jig-label"></div></div>
+        <div class="jig-item"><div class="jig-slot"></div><div class="jig-label"></div></div>
+        <div class="jig-item"><div class="jig-slot"></div><div class="jig-label"></div></div>
       </div>
     </div>
   </div>
@@ -347,7 +366,6 @@
   <audio id="soundDing" src="ding.mp3" preload="auto"></audio>
 
   <script>
-    // Responsive scaling logic without scrollbars
     const scaler = document.getElementById('appScaler');
     function resizeApp() {
       const BASE_WIDTH = 1100;
@@ -531,7 +549,7 @@
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const cageRadius = 160;
+      const cageRadius = 155;
 
       if (isShuffling) {
         rotationSpeed = 0.15;
@@ -613,9 +631,13 @@
     }
 
     function updateJigUI() {
-      const slots = jigContainer.querySelectorAll('.jig-slot');
-      slots.forEach((slot, index) => {
+      const items = jigContainer.querySelectorAll('.jig-item');
+      items.forEach((item, index) => {
+        const slot = item.querySelector('.jig-slot');
+        const label = item.querySelector('.jig-label');
         slot.innerHTML = '';
+        label.textContent = '';
+        
         if (placedBalls[index]) {
           const b = placedBalls[index];
           const ballEl = document.createElement('div');
@@ -623,6 +645,9 @@
           ballEl.style.backgroundColor = b.color;
           ballEl.textContent = b.code;
           slot.appendChild(ballEl);
+
+          label.textContent = b.name;
+          label.style.color = b.color;
         }
       });
     }
