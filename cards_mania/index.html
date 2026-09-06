@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mania Cards · Real Shuffle</title>
+    <style>
+        :root {
+            --bg-color: #1a1512; 
+            --card-base: #bda290;
+            --card-stripe: #6e5446;
+            --text-color: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #bda290, #f8fafc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .deck-container {
+            position: relative;
+            width: 260px; 
+            height: 360px;
+            perspective: 1500px;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            will-change: transform;
+            cursor: pointer;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 24px;
+            border: 10px solid var(--card-base);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-front {
+            z-index: 2;
+            background-color: var(--card-base);
+            background-image: repeating-conic-gradient(from 0deg, var(--card-stripe) 0deg 10deg, transparent 10deg 20deg);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            z-index: 1;
+            background-color: var(--card-base);
+        }
+
+        .card-inner-oval {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            background-color: var(--card-base);
+            border-radius: 50%;
+            border: 2px dashed var(--card-stripe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-back .card-inner-oval::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: repeating-conic-gradient(from 0deg, rgba(110, 84, 70, 0.08) 0deg 15deg, transparent 15deg 30deg);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .card-front .question-mark {
+            font-size: 7rem;
+            font-weight: 900;
+            color: var(--card-stripe);
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.3);
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .content-layout {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .text-question {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #3a271d;
+            line-height: 1.4;
+            text-shadow: 
+                -1px -1px 0 #fff,  
+                 1px -1px 0 #fff,
+                -1px  1px 0 #fff,
+                 1px  1px 0 #fff,
+                 2px  2px 4px rgba(0,0,0,0.2);
+        }
+
+        .icon-block {
+            width: 110px;
+            height: 110px;
+            border: 10px solid var(--card-stripe);
+            border-radius: 50%;
+            position: relative;
+            transform: rotate(-45deg);
+            background-color: var(--card-base);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .icon-block::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 90px;
+            background-color: var(--card-stripe);
+            left: 40px; top: 0;
+        }
+
+        .icon-rewind {
+            display: flex;
+            gap: 4px;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.1));
+        }
+        .triangle {
+            width: 0;
+            height: 0;
+            border-top: 35px solid transparent;
+            border-bottom: 35px solid transparent;
+            border-right: 50px solid var(--card-stripe);
+        }
+
+        .card.drawn {
+            z-index: 1000 !important;
+            transform: translate3d(0, -30px, 150px) rotateY(180deg) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mania Cards</h1>
+
+    <div class="deck-container" id="deck" onclick="triggerRealisticShuffle()"></div>
+
+    <script>
+        // -------- load MP3 sounds (same folder) --------
+        const shuffleSound = new Audio('shuffle.mp3');
+        const flipSound = new Audio('flip.mp3');
+        shuffleSound.load();
+        flipSound.load();
+
+        function playSound(audioElement) {
+            try {
+                audioElement.currentTime = 0;
+                const playPromise = audioElement.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {});
+                }
+            } catch (_) {}
+        }
+
+        // -------- deck logic --------
+        const cardPool = [
+            { type: 'text', data: 'Kailan ginagamit ang salitang nabuo?' },
+            { type: 'text', data: 'Gamitin sa pangungusap.' },
+            { type: 'icon-block', data: '' },
+            { type: 'icon-rewind', data: '' },
+            { type: 'text', data: 'Ipaliwanag kung anong ibig sabihin ng salita.' }
+        ];
+
+        const deck = document.getElementById('deck');
+        let cards = [];
+        let isAnimating = false;
+        const totalCardsCount = 10; 
+
+        function buildDeck() {
+            deck.innerHTML = '';
+            cards = [];
+            
+            for (let i = 0; i < totalCardsCount; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.transform = `translate3d(0, ${i * -0.5}px, ${i * -0.2}px)`;
+                card.style.zIndex = i;
+
+                const layout = cardPool[i % cardPool.length];
+                let backContentHtml = '';
+
+                if (layout.type === 'text') {
+                    backContentHtml = `<span class="text-question">${layout.data}</span>`;
+                } else if (layout.type === 'icon-block') {
+                    backContentHtml = `<div class="icon-block"></div>`;
+                } else if (layout.type === 'icon-rewind') {
+                    backContentHtml = `<div class="icon-rewind"><div class="triangle"></div><div class="triangle"></div></div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="card-face card-front">
+                        <div class="card-inner-oval">
+                            <span class="question-mark">?</span>
+                        </div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="card-inner-oval">
+                            <div class="content-layout">
+                                ${backContentHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                deck.appendChild(card);
+                cards.push(card);
+            }
+        }
+
+        function triggerRealisticShuffle() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            playSound(shuffleSound);
+
+            // Phase 1: Spread
+            cards.forEach((card, i) => {
+                const side = i < totalCardsCount / 2 ? -1 : 1;
+                card.style.transition = 'transform 0.3s ease-out';
+                const offsetX = side * (80 + Math.random() * 30);
+                const offsetY = (Math.random() - 0.5) * 20;
+                const rotation = side * (5 + Math.random() * 8);
+                card.style.transform = `translate3d(${offsetX}px, ${offsetY}px, ${10 + Math.random() * 15}px) rotateZ(${rotation}deg)`;
+                card.style.zIndex = i;
+            });
+
+            // Phase 2: Mix
+            setTimeout(() => {
+                cards.forEach((card) => {
+                    card.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1)';
+                    const x = (Math.random() - 0.5) * 140;
+                    const y = (Math.random() - 0.5) * 90;
+                    const rot = (Math.random() - 0.5) * 30;
+                    card.style.transform = `translate3d(${x}px, ${y}px, ${(Math.random() - 0.5) * 30}px) rotateZ(${rot}deg)`;
+                    card.style.zIndex = Math.floor(Math.random() * 50) + 10;
+                });
+            }, 350);
+
+            // Phase 3: Gather
+            setTimeout(() => {
+                cards.forEach((card, i) => {
+                    card.style.transition = 'transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1)';
+                    const offsetY = (i - totalCardsCount / 2) * 0.3 + (Math.random() - 0.5) * 1;
+                    const offsetX = (Math.random() - 0.5) * 1;
+                    card.style.transform = `translate3d(${offsetX}px, ${offsetY}px, ${i * -0.2 + (Math.random() - 0.5) * 0.3}px)`;
+                    card.style.zIndex = i;
+                });
+            }, 800);
+
+            // Phase 4: Final stack and pick
+            setTimeout(() => {
+                cards.forEach((card, i) => {
+                    card.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.2, 1)';
+                    card.style.transform = `translate3d(0, ${i * -0.5}px, ${i * -0.2}px)`;
+                    card.style.zIndex = i;
+                });
+
+                setTimeout(() => {
+                    const targetIndex = Math.floor(Math.random() * cards.length);
+                    const selected = cards[targetIndex];
+
+                    // Reset others
+                    cards.forEach((card, i) => {
+                        if (card !== selected) {
+                            card.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)';
+                            card.style.transform = `translate3d(0, ${i * -0.5}px, ${i * -0.2}px)`;
+                            card.style.zIndex = i;
+                        }
+                    });
+
+                    // Draw the selected card
+                    selected.classList.add('drawn');
+                    playSound(flipSound);
+
+                    // THIS IS YOUR ORIGINAL WORKING CODE - KEEP EXACTLY AS IS
+                    selected.onclick = (e) => {
+                        e.stopPropagation();
+                        playSound(flipSound);
+                        selected.classList.remove('drawn');
+                        setTimeout(() => {
+                            buildDeck();
+                            isAnimating = false;
+                        }, 400);
+                    };
+                }, 300);
+            }, 1200);
+        }
+
+        buildDeck();
+    </script>
+</body>
+</html>

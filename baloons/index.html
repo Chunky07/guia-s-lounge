@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>#Wikarunungan · responsive</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --border-color: #444;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            touch-action: manipulation;
+            user-select: none;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: clamp(6px, 1.5vh, 16px);
+        }
+        .game-full-view, .lesson-full-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .lesson-full-view {
+            display: none;
+        }
+        h1 {
+            margin: 0 0 0.2vh 0;
+            font-size: clamp(1.8rem, 5vh, 3.4rem);
+            color: #fff;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+        .instructions {
+            font-size: clamp(0.95rem, 2.2vh, 1.4rem);
+            margin-bottom: 0.8vh;
+            color: #ccc;
+            flex-shrink: 0;
+        }
+        .balloon-area {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            flex: 1 1 auto;
+            min-height: 120px;
+            margin-bottom: 0.8vh;
+            padding: 0.5vh 1vw;
+            border-bottom: 2px dashed var(--border-color);
+            background: rgba(255,255,255,0.01);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .balloon-container {
+            position: relative;
+            width: clamp(60px, 12vw, 110px);
+            height: 100%;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            flex: 0 1 auto;
+        }
+        @keyframes float-1 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(1deg); } }
+        @keyframes float-2 { 0%,100% { transform: translateY(-3px) rotate(-1deg); } 50% { transform: translateY(-15px) rotate(2deg); } }
+        @keyframes float-3 { 0%,100% { transform: translateY(-5px) rotate(1deg); } 50% { transform: translateY(-18px) rotate(-1deg); } }
+        .balloon-wrapper {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+            touch-action: manipulation;
+        }
+        .balloon-container:nth-child(1) .balloon-wrapper { animation: float-1 4s ease-in-out infinite; }
+        .balloon-container:nth-child(2) .balloon-wrapper { animation: float-2 4.5s ease-in-out infinite; }
+        .balloon-container:nth-child(3) .balloon-wrapper { animation: float-3 3.8s ease-in-out infinite; }
+        .balloon-container:nth-child(4) .balloon-wrapper { animation: float-1 4.2s ease-in-out infinite; }
+        .balloon-container:nth-child(5) .balloon-wrapper { animation: float-2 4.7s ease-in-out infinite; }
+        .balloon-container:nth-child(6) .balloon-wrapper { animation: float-3 4.0s ease-in-out infinite; }
+        .balloon-wrapper:hover {
+            animation-play-state: paused;
+            transform: scale(1.03);
+        }
+        .balloon {
+            width: clamp(44px, 9vw, 72px);
+            height: clamp(58px, 12vh, 92px);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3), 0 3px 6px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+        .balloon::after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid currentColor;
+            filter: brightness(0.8);
+        }
+        .balloon-string {
+            width: 2px;
+            height: clamp(30px, 6vh, 55px);
+            background: rgba(255,255,255,0.3);
+            position: relative;
+            top: 3px;
+        }
+        .paper {
+            background: #fffdf0;
+            color: #111;
+            padding: clamp(5px, 1vh, 12px) clamp(8px, 1.8vw, 20px);
+            font-weight: bold;
+            font-size: clamp(0.85rem, 2.2vh, 1.3rem);
+            border-radius: 5px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.4);
+            cursor: grab;
+            border-left: 5px solid #eccc68;
+            position: absolute;
+            top: 8px;
+            z-index: 10;
+            animation: appear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: none;
+            white-space: nowrap;
+            touch-action: none;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .paper.candy-paper {
+            border-left: 5px solid #ff6b81;
+            background: #fff0f2;
+            cursor: default;
+        }
+        .paper:active:not(.candy-paper) { cursor: grabbing; }
+        @keyframes appear {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .table-wrapper {
+            flex-shrink: 0;
+            margin-top: auto;
+            width: 100%;
+        }
+        .sorting-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            font-size: clamp(0.75rem, 1.8vh, 1.1rem);
+        }
+        .sorting-table td {
+            border: 2px solid #000;
+            padding: clamp(4px, 1vh, 12px) clamp(6px, 1.2vw, 16px);
+            text-align: left;
+            vertical-align: middle;
+        }
+        .sorting-table tr td:first-child {
+            width: 20%;
+            font-weight: bold;
+            background-color: #252525;
+            font-size: clamp(0.9rem, 2vh, 1.3rem);
+            white-space: nowrap;
+        }
+        .drop-zone {
+            min-height: clamp(36px, 6vh, 58px);
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(4px, 0.6vw, 10px);
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            transition: background 0.2s, border-color 0.2s;
+            border: 1px dashed transparent;
+            border-radius: 4px;
+            padding: clamp(3px, 0.5vh, 8px);
+        }
+        .drop-zone.drag-over {
+            background: rgba(255,255,255,0.1);
+            border-color: #fff;
+        }
+        .drop-zone .paper {
+            position: static !important;
+            animation: none;
+            font-size: clamp(0.75rem, 1.8vh, 1.1rem);
+            padding: clamp(3px, 0.6vh, 8px) clamp(6px, 1vw, 14px);
+        }
+        .correct {
+            border-left: 5px solid #2ed573 !important;
+            background-color: #e3fcef !important;
+        }
+        .wrong {
+            border-left: 5px solid #ff4757 !important;
+            background-color: #ffeae6 !important;
+        }
+        .btn-next {
+            display: block;
+            margin: 1vh auto 0 auto;
+            padding: clamp(6px, 1.2vh, 14px) clamp(18px, 4vw, 40px);
+            font-size: clamp(0.95rem, 2.2vh, 1.3rem);
+            font-weight: bold;
+            color: #fff;
+            background-color: #2980b9;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .btn-next:hover { background-color: #3498db; }
+        /* LESSON SECTION - fully responsive */
+        .lesson-content {
+            border: 1px solid #555;
+            padding: clamp(8px, 2vh, 30px) clamp(10px, 2.5vw, 40px);
+            border-radius: 8px;
+            background: #222;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s;
+        }
+        .lesson-content h2 {
+            margin-top: 0;
+            margin-bottom: clamp(6px, 1.2vh, 20px);
+            color: #fff;
+            border-bottom: 3px solid #444;
+            padding-bottom: clamp(4px, 0.8vh, 14px);
+            font-size: clamp(2rem, 5vh, 3.6rem);
+            flex-shrink: 0;
+        }
+        .lesson-section-block {
+            background: rgba(255,255,255,0.02);
+            padding: clamp(8px, 1.5vh, 24px) clamp(10px, 2vw, 30px);
+            border-radius: 6px;
+            border: 1px solid #333;
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+        .lesson-section-block.active { display: flex; }
+        .lesson-section-block > h3 {
+            font-size: clamp(1.8rem, 4.2vh, 3.2rem);
+            color: #2ecc71;
+            margin-top: 0;
+            margin-bottom: clamp(4px, 0.8vh, 14px);
+            border-bottom: 2px solid #555;
+            padding-bottom: clamp(4px, 0.6vh, 12px);
+            flex-shrink: 0;
+        }
+        .lesson-section-block > p {
+            font-size: clamp(1.2rem, 2.8vh, 2rem);
+            color: #ccc;
+            margin-top: 0.2vh;
+            margin-bottom: clamp(8px, 1.8vh, 30px);
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+        .lesson-item {
+            margin-left: 0;
+            margin-bottom: clamp(8px, 1.8vh, 30px);
+            font-size: clamp(1.1rem, 2.5vh, 1.8rem);
+            line-height: 1.5;
+            flex-shrink: 0;
+        }
+        .lesson-item strong {
+            color: #e74c3c;
+            font-size: clamp(1.2rem, 2.8vh, 2rem);
+        }
+        .example-box {
+            background: #2c3e50;
+            padding: clamp(6px, 1vh, 18px) clamp(12px, 2vw, 28px);
+            border-radius: 6px;
+            margin-top: clamp(4px, 0.6vh, 12px);
+            font-style: italic;
+            color: #f1c40f;
+            font-size: clamp(1rem, 2.2vh, 1.6rem);
+            font-weight: bold;
+            border-left: 6px solid #f1c40f;
+        }
+        .lesson-nav-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: clamp(6px, 1.2vw, 20px);
+            margin-top: clamp(6px, 1.2vh, 20px);
+            padding-top: clamp(4px, 0.6vh, 12px);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .btn-nav {
+            padding: clamp(6px, 1.2vh, 16px) clamp(10px, 2.5vw, 30px);
+            font-size: clamp(0.9rem, 2vh, 1.3rem);
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            flex: 0 1 auto;
+            min-width: 60px;
+            touch-action: manipulation;
+        }
+        .btn-wikarunungan { background-color: #e67e22; }
+        .btn-wikarunungan:hover { background-color: #f39c12; }
+        .btn-balik { background-color: #27ae60; }
+        .btn-balik:hover:not(:disabled) { background-color: #2ecc71; }
+        .btn-sunod { background-color: #2980b9; }
+        .btn-sunod:hover:not(:disabled) { background-color: #3498db; }
+        .btn-fullscreen {
+            background-color: #7f8c8d;
+            padding: clamp(6px, 1.2vh, 16px) clamp(10px, 1.5vw, 22px);
+        }
+        .btn-fullscreen:hover { background-color: #95a5a6; }
+        .btn-nav:disabled {
+            background-color: #555 !important;
+            color: #888 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+        /* fullscreen tweaks */
+        :-webkit-full-screen .lesson-content { padding: 4vh 5vw; background: #111; }
+        :-ms-fullscreen .lesson-content { padding: 4vh 5vw; background: #111; }
+        :fullscreen .lesson-content { padding: 4vh 5vw; background: #111; }
+
+        @media (max-width: 640px) {
+            .balloon-area { min-height: 100px; }
+            .balloon { width: 40px; height: 54px; }
+            .balloon-string { height: 28px; }
+            .sorting-table tr td:first-child { width: 28%; font-size: 0.85rem; }
+            .paper { font-size: 0.75rem; padding: 4px 8px; }
+            .drop-zone .paper { font-size: 0.7rem; padding: 3px 6px; }
+            .lesson-item { font-size: 1rem; }
+            .example-box { font-size: 0.9rem; }
+            .lesson-section-block > p { font-size: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .balloon-area { justify-content: space-evenly; }
+            .balloon-container { width: 48px; }
+            .balloon { width: 34px; height: 46px; }
+            .balloon-string { height: 22px; }
+            .sorting-table td { padding: 3px 4px; }
+            .sorting-table tr td:first-child { font-size: 0.7rem; width: 32%; }
+            .drop-zone { min-height: 28px; gap: 2px; }
+            .drop-zone .paper { font-size: 0.6rem; padding: 2px 5px; }
+            .btn-nav { font-size: 0.7rem; padding: 4px 8px; min-width: 44px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-full-view" id="gameSection">
+    <h1>#Wikarunungan</h1>
+    <div class="instructions">Panuto: Tukuyin ang antas ng wika ng salita sa lobo.</div>
+    <div class="balloon-area" id="balloonArea"></div>
+    <div class="table-wrapper">
+        <table class="sorting-table">
+            <tbody>
+                <tr><td>Pambansa</td><td class="drop-zone" data-category="Pambansa"></td></tr>
+                <tr><td>Pampanitikan</td><td class="drop-zone" data-category="Pampanitikan"></td></tr>
+                <tr><td>Lalawiganin</td><td class="drop-zone" data-category="Lalawiganin"></td></tr>
+                <tr><td>Kolokyal</td><td class="drop-zone" data-category="Kolokyal"></td></tr>
+                <tr><td>Balbal</td><td class="drop-zone" data-category="Balbal"></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <button class="btn-next" id="btnGoToLesson">Antas ng Wika</button>
+</div>
+
+<div class="lesson-full-view" id="lessonSection">
+    <div class="lesson-content" id="lessonContentWrapper">
+        <h2>Antas ng Wika</h2>
+        <div class="lesson-section-block active" id="blockPormal">
+            <h3>Pormal</h3>
+            <p>Ito ay antas ng wika na istandard at kinikilala o ginagamit ng nakararami.</p>
+            <div class="lesson-item"><strong>Pambansa</strong> — ginagamit ng karaniwang manunulat sa aklat at pambalarila.<div class="example-box">Hal.: Asawa, Anak, Kapatid, Pera, Maganda</div></div>
+            <div class="lesson-item"><strong>Pampanitikan</strong> — matalinghaga at masining na pagpapahayag.<div class="example-box">Hal.: Anak-dalita, Dalawa ang bibig, Makapal ang bulsa</div></div>
+        </div>
+        <div class="lesson-section-block" id="blockImpormal">
+            <h3 style="color: #3498db;">Impormal</h3>
+            <p>Karaniwan, palasak, pang-araw-araw na gamit sa pakikipag-usap.</p>
+            <div class="lesson-item"><strong>Lalawiganin</strong> — natural na ginagamit sa partikular na lugar.<div class="example-box">Hal.: Daga (Bikol: Lupa, Tagalog: hayop)</div></div>
+            <div class="lesson-item"><strong>Kolokyal</strong> — pagpapaikli ng mga salita.<div class="example-box">Hal.: Meron (Mayroon), Tol (Utol)</div></div>
+            <div class="lesson-item"><strong>Balbal</strong> — katumbas ng “slang”, pagbabaliktad ng letra.<div class="example-box">Hal.: Chicks (Dalaga), Erpat (Ama), Datung (Pera)</div></div>
+        </div>
+        <div class="lesson-nav-panel">
+            <button class="btn-nav btn-wikarunungan" id="btnWikarunungan">Wikarunungan</button>
+            <button class="btn-nav btn-balik" id="btnBalik" disabled>Balik</button>
+            <button class="btn-nav btn-sunod" id="btnSunod">Sunod</button>
+            <button class="btn-nav btn-fullscreen" id="btnToggleFullscreen">[ ]</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // audio placeholders (no actual files)
+        const audioPop = { play: ()=>{} };
+        const audioGrab = { play: ()=>{} };
+        const audioPlace = { play: ()=>{} };
+        const audioIncorrect = { play: ()=>{} };
+        const audioCorrect = { play: ()=>{} };
+        try {
+            if (window.Audio) {
+                const p = new Audio('pop.mp3'); p.volume=0.3; audioPop.play = ()=>p.play().catch(()=>{});
+                const g = new Audio('grab.mp3'); audioGrab.play = ()=>g.play().catch(()=>{});
+                const pl = new Audio('place.mp3'); audioPlace.play = ()=>pl.play().catch(()=>{});
+                const inc = new Audio('incorrect.mp3'); audioIncorrect.play = ()=>inc.play().catch(()=>{});
+                const corr = new Audio('correct.mp3'); audioCorrect.play = ()=>corr.play().catch(()=>{});
+            }
+        } catch(e){}
+
+        const dataSet = [
+            { word: "Meron (Mayroon)", category: "Kolokyal", color: "#d35400", isCandy: false },
+            { word: "Magayon", category: "Lalawiganin", color: "#2ecc71", isCandy: false },
+            { word: "Asawa", category: "Pambansa", color: "#c0392b", isCandy: false },
+            { word: "Balat Sibuyas", category: "Pampanitikan", color: "#2980b9", isCandy: false },
+            { word: "Erpat", category: "Balbal", color: "#f1c40f", isCandy: false },
+            { word: "🍬🍬🍬", category: "FreePass", color: "#8e44ad", isCandy: true }
+        ];
+
+        function shuffle(a) { for (let i=a.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+        const balloonArea = document.getElementById('balloonArea');
+        const shuffled = shuffle([...dataSet]);
+
+        shuffled.forEach((item, idx) => {
+            const container = document.createElement('div');
+            container.className = 'balloon-container';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'balloon-wrapper';
+
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            balloon.style.backgroundColor = item.color;
+            balloon.style.color = item.color;
+
+            const string = document.createElement('div');
+            string.className = 'balloon-string';
+
+            const paper = document.createElement('div');
+            paper.className = 'paper';
+            paper.textContent = item.word;
+            paper.id = `paper-${idx}`;
+            paper.setAttribute('data-category', item.category);
+            if (item.isCandy) {
+                paper.classList.add('candy-paper');
+            } else {
+                paper.setAttribute('draggable', 'true');
+            }
+
+            wrapper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                audioPop.play();
+                wrapper.style.display = 'none';
+                paper.style.display = 'block';
+                // reposition paper if needed
+                paper.style.position = 'absolute';
+                paper.style.left = '10px';
+                paper.style.top = '8px';
+            });
+
+            if (!item.isCandy) {
+                // drag & drop for desktop
+                paper.addEventListener('dragstart', (e) => {
+                    audioGrab.play();
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                });
+
+                // touch support
+                let touchOffsetX = 0, touchOffsetY = 0;
+                paper.addEventListener('touchstart', (e) => {
+                    if (paper.parentElement.classList.contains('drop-zone')) return;
+                    audioGrab.play();
+                    const touch = e.touches[0];
+                    const rect = paper.getBoundingClientRect();
+                    touchOffsetX = touch.clientX - rect.left;
+                    touchOffsetY = touch.clientY - rect.top;
+                    paper.style.zIndex = 1000;
+                }, { passive: true });
+
+                paper.addEventListener('touchmove', (e) => {
+                    if (paper.parentElement.classList.contains('drop-zone')) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const areaRect = balloonArea.getBoundingClientRect();
+                    let x = touch.clientX - areaRect.left - touchOffsetX;
+                    let y = touch.clientY - areaRect.top - touchOffsetY;
+                    paper.style.left = `${Math.max(0, x)}px`;
+                    paper.style.top = `${Math.max(0, y)}px`;
+                    paper.style.position = 'absolute';
+                }, { passive: false });
+
+                paper.addEventListener('touchend', (e) => {
+                    if (paper.parentElement.classList.contains('drop-zone')) return;
+                    const touch = e.changedTouches[0];
+                    paper.style.zIndex = 10;
+                    paper.style.display = 'none';
+                    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                    paper.style.display = 'block';
+                    const dropZone = el ? el.closest('.drop-zone') : null;
+                    if (dropZone) {
+                        handleDrop(dropZone, paper);
+                    } else {
+                        paper.style.position = 'absolute';
+                        paper.style.left = '10px';
+                        paper.style.top = '8px';
+                    }
+                });
+            }
+
+            wrapper.appendChild(balloon);
+            wrapper.appendChild(string);
+            container.appendChild(wrapper);
+            container.appendChild(paper);
+            balloonArea.appendChild(container);
+        });
+
+        const dropZones = document.querySelectorAll('.drop-zone');
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const id = e.dataTransfer.getData('text/plain');
+                const paper = document.getElementById(id);
+                if (paper) handleDrop(zone, paper);
+            });
+        });
+
+        function handleDrop(zone, paper) {
+            zone.appendChild(paper);
+            paper.style.position = 'static';
+            audioPlace.play();
+            const target = zone.getAttribute('data-category');
+            const paperCat = paper.getAttribute('data-category');
+            paper.classList.remove('correct', 'wrong');
+            if (target === paperCat) {
+                paper.classList.add('correct');
+                audioCorrect.play();
+            } else {
+                paper.classList.add('wrong');
+                audioIncorrect.play();
+            }
+        }
+
+        const gameSection = document.getElementById('gameSection');
+        const lessonSection = document.getElementById('lessonSection');
+        const blockPormal = document.getElementById('blockPormal');
+        const blockImpormal = document.getElementById('blockImpormal');
+        const btnBalik = document.getElementById('btnBalik');
+        const btnSunod = document.getElementById('btnSunod');
+        const btnToggleFS = document.getElementById('btnToggleFullscreen');
+
+        document.getElementById('btnGoToLesson').addEventListener('click', ()=>{
+            gameSection.style.display = 'none';
+            lessonSection.style.display = 'flex';
+            showPormal();
+        });
+
+        document.getElementById('btnWikarunungan').addEventListener('click', ()=>{
+            if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+            lessonSection.style.display = 'none';
+            gameSection.style.display = 'flex';
+        });
+
+        btnBalik.addEventListener('click', showPormal);
+        btnSunod.addEventListener('click', showImpormal);
+
+        btnToggleFS.addEventListener('click', ()=>{
+            if (!document.fullscreenElement) {
+                lessonSection.requestFullscreen().catch(err => alert('Fullscreen error: '+err.message));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', ()=>{
+            btnToggleFS.textContent = document.fullscreenElement ? '[X]' : '[ ]';
+        });
+
+        function showPormal() {
+            blockImpormal.classList.remove('active');
+            blockPormal.classList.add('active');
+            btnBalik.disabled = true;
+            btnSunod.disabled = false;
+            blockPormal.scrollTop = 0;
+        }
+        function showImpormal() {
+            blockPormal.classList.remove('active');
+            blockImpormal.classList.add('active');
+            btnBalik.disabled = false;
+            btnSunod.disabled = true;
+            blockImpormal.scrollTop = 0;
+        }
+    })();
+</script>
+</body>
+</html>
