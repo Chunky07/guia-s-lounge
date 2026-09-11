@@ -205,14 +205,36 @@
             { type: 'text', data: 'Kailan ginagamit ang salitang nabuo?' },
             { type: 'text', data: 'Gamitin sa pangungusap.' },
             { type: 'icon-block', data: '' },
-            { type: 'icon-rewind', data: '' },
             { type: 'text', data: 'Ipaliwanag kung anong ibig sabihin ng salita.' }
         ];
 
         const deck = document.getElementById('deck');
         let cards = [];
         let isAnimating = false;
-        const totalCardsCount = 10; 
+        const totalCardsCount = 10;
+
+        // -------- bag-shuffle state --------
+        let drawQueue = [];          // shuffled queue of indices to draw from
+        let lastDrawnIndex = -1;     // remembers last card so no back-to-back repeats
+
+        // Returns the next card index using a "bag" shuffle:
+        // every card is drawn once before any card is drawn again.
+        function getNextCardIndex() {
+            if (drawQueue.length === 0) {
+                drawQueue = cards.map((_, i) => i);
+                // Fisher-Yates shuffle
+                for (let i = drawQueue.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [drawQueue[i], drawQueue[j]] = [drawQueue[j], drawQueue[i]];
+                }
+                // Avoid drawing the same card as the previous draw at the cycle boundary
+                if (lastDrawnIndex !== -1 && drawQueue[0] === lastDrawnIndex && drawQueue.length > 1) {
+                    const swap = Math.floor(Math.random() * (drawQueue.length - 1)) + 1;
+                    [drawQueue[0], drawQueue[swap]] = [drawQueue[swap], drawQueue[0]];
+                }
+            }
+            return drawQueue.shift();
+        }
 
         function buildDeck() {
             deck.innerHTML = '';
@@ -231,8 +253,6 @@
                     backContentHtml = `<span class="text-question">${layout.data}</span>`;
                 } else if (layout.type === 'icon-block') {
                     backContentHtml = `<div class="icon-block"></div>`;
-                } else if (layout.type === 'icon-rewind') {
-                    backContentHtml = `<div class="icon-rewind"><div class="triangle"></div><div class="triangle"></div></div>`;
                 }
 
                 card.innerHTML = `
@@ -253,6 +273,9 @@
                 deck.appendChild(card);
                 cards.push(card);
             }
+
+            // Reset the draw queue so each new deck cycle starts fresh
+            drawQueue = [];
         }
 
         function triggerRealisticShuffle() {
@@ -304,8 +327,10 @@
                 });
 
                 setTimeout(() => {
-                    const targetIndex = Math.floor(Math.random() * cards.length);
+                    // Use bag-shuffle instead of pure random
+                    const targetIndex = getNextCardIndex();
                     const selected = cards[targetIndex];
+                    lastDrawnIndex = targetIndex;
 
                     // Reset others
                     cards.forEach((card, i) => {
@@ -320,7 +345,7 @@
                     selected.classList.add('drawn');
                     playSound(flipSound);
 
-                    // THIS IS YOUR ORIGINAL WORKING CODE - KEEP EXACTLY AS IS
+                    // Flip back and rebuild
                     selected.onclick = (e) => {
                         e.stopPropagation();
                         playSound(flipSound);
