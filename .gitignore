@@ -1,0 +1,10 @@
+# Playwright MCP scratch: debug snapshots, console logs, screenshots.
+# Not part of the site - regenerate any time.
+.playwright-mcp/
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+*.log

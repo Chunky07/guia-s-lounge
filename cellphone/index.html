@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cellphone &middot; Isang Aklat</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#2b1d12; --parch-a:#f7f0dd; --parch-b:#e9dcbe; --parch-back:#ded0b0;
+    --gold:#d4af37; --cover:#4a1d2f; --turndur:1.05s;
+  }
+  html,body{height:100%}
+  body{
+    background:radial-gradient(ellipse at 50% 38%,#261142 0%,#130a24 52%,#07040e 100%);
+    color:#e8dcc0;font-family:"Bookman Old Style",Georgia,"Times New Roman",serif;
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  #bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;
+      filter:blur(24px) brightness(.32) saturate(.6);transform:scale(1.14);z-index:0}
+  #veil{position:fixed;inset:0;z-index:1;pointer-events:none;
+        background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 22%,rgba(4,2,10,.86) 100%)}
+  #candle{position:fixed;left:50%;top:52%;width:120vmax;height:120vmax;transform:translate(-50%,-50%);
+      z-index:2;pointer-events:none;mix-blend-mode:screen;opacity:.5;
+      background:radial-gradient(circle,rgba(255,196,110,.16) 0%,rgba(255,170,80,.06) 34%,transparent 62%);
+      animation:flicker 5.5s ease-in-out infinite}
+  @keyframes flicker{
+    0%,100%{opacity:.46;transform:translate(-50%,-50%) scale(1)}
+    28%{opacity:.58;transform:translate(-50.4%,-49.6%) scale(1.035)}
+    46%{opacity:.42;transform:translate(-49.6%,-50.3%) scale(.982)}
+    71%{opacity:.54;transform:translate(-50.2%,-50.6%) scale(1.022)}}
+  #dust{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+  .mote{position:absolute;border-radius:50%;background:rgba(255,226,150,.5);
+        box-shadow:0 0 7px rgba(255,210,120,.65);animation:drift linear infinite}
+  @keyframes drift{
+    0%{transform:translate3d(0,14vh,0) scale(.55);opacity:0}
+    14%{opacity:.8}84%{opacity:.45}
+    100%{transform:translate3d(24px,-104vh,0) scale(1.15);opacity:0}}
+  header{position:relative;z-index:6;text-align:center;padding:16px 16px 2px}
+  h1{font-size:clamp(19px,3.2vw,31px);letter-spacing:.17em;font-weight:400;color:var(--gold);
+     text-shadow:0 0 24px rgba(212,175,55,.45)}
+  header p{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#8d7f9e;margin-top:5px}
+  #stage{position:relative;z-index:6;flex:1;display:flex;align-items:center;
+         justify-content:center;padding:6px 16px 0;min-height:0}
+  #book{position:relative;width:min(900px,94vw);aspect-ratio:16/10;max-height:66vh;
+        perspective:3000px;perspective-origin:50% 50%}
+  .stage{position:absolute;inset:0;transform-style:preserve-3d}
+  .under{position:absolute;top:0;bottom:0;width:50%;overflow:hidden;
+         background:linear-gradient(160deg,var(--parch-a),var(--parch-b) 85%);
+         box-shadow:0 18px 40px rgba(0,0,0,.55)}
+  #uL{left:0;border-radius:6px 0 0 6px}
+  #uR{right:0;border-radius:0 6px 6px 0;
+      background:linear-gradient(200deg,var(--parch-a),var(--parch-b) 85%);
+      box-shadow:inset 16px 0 30px -16px rgba(84,56,28,.5),0 18px 40px rgba(0,0,0,.55)}
+  #turn{position:absolute;top:0;bottom:0;left:50%;width:50%;
+        transform-origin:left center;transform-style:preserve-3d;
+        transition:transform var(--turndur) cubic-bezier(.52,.06,.6,.18)}
+  #turn.nomo{transition:none}
+  #turn.turning{transform:rotateY(-180deg) rotateZ(.35deg)}
+  .face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;
+        background:linear-gradient(160deg,var(--parch-a),var(--parch-b) 85%)}
+  .face.back{transform:rotateY(180deg);
+        background:repeating-linear-gradient(92deg,rgba(140,110,60,.045) 0 2px,transparent 2px 5px),
+                   linear-gradient(200deg,var(--parch-back),#d6c7a6)}
+  #curl{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:3;
+        background:linear-gradient(90deg,rgba(46,28,10,.26) 0%,rgba(255,252,238,.34) 38%,
+                   rgba(255,250,230,.12) 58%,rgba(46,28,10,.22) 100%);
+        transition:opacity .35s ease}
+  #turn.turning #curl{opacity:1;animation:sweep var(--turndur) linear}
+  @keyframes sweep{0%{background-position:120% 0}100%{background-position:-60% 0}}
+  #cast{position:absolute;top:0;bottom:0;left:50%;width:50%;pointer-events:none;z-index:4;
+        opacity:0;transition:opacity .45s ease;
+        background:linear-gradient(90deg,rgba(38,22,8,.62),rgba(38,22,8,.18) 46%,transparent 82%)}
+  #cast.lit{opacity:.9}
+  .gutter{position:absolute;top:-2px;bottom:-2px;left:50%;width:46px;transform:translateX(-50%);
+        pointer-events:none;z-index:5;opacity:.72;transition:opacity .4s ease;
+        background:linear-gradient(90deg,transparent,rgba(62,38,16,.16) 42%,rgba(62,38,16,.26) 52%,transparent)}
+  #turn.turning ~ .gutter{opacity:1}
+  .cover{position:absolute;top:-12px;bottom:-12px;width:50%;z-index:7;
+         transform-style:preserve-3d;backface-visibility:hidden;
+         transition:transform 1.5s cubic-bezier(.3,1.12,.35,1)}
+  #covR{right:-8px;transform-origin:left center;transform:rotateY(0deg);
+        background:linear-gradient(140deg,#5d2740,#33121f 62%,#240c16);
+        box-shadow:inset 0 0 0 2px rgba(212,175,55,.4),inset 0 0 30px rgba(0,0,0,.75)}
+  #covL{left:-8px;transform-origin:right center;transform:rotateY(0deg);
+        background:linear-gradient(220deg,#5d2740,#33121f 62%,#240c16);
+        box-shadow:inset 0 0 0 2px rgba(212,175,55,.4),inset 0 0 30px rgba(0,0,0,.75)}
+  #covR::after,#covL::after{content:"";position:absolute;left:50%;top:50%;
+        width:74px;height:74px;margin:-37px 0 0 -37px;opacity:.5;
+        border:1px solid rgba(212,175,55,.55);transform:rotate(45deg);
+        box-shadow:inset 0 0 22px rgba(212,175,55,.22)}
+  #book.open #covR{transform:rotateY(-166deg)}
+  #book.open #covL{transform:rotateY(166deg)}
+  .under,.face{padding:clamp(14px,2.8vw,32px);display:flex;
+         flex-direction:column;justify-content:center;overflow:hidden;
+         color:var(--ink);font-size:clamp(12px,1.5vw,19px);line-height:1.68;
+         text-align:left;overflow-wrap:break-word}
+  .under p,.face p{margin:0 0 .5em;text-indent:1.1em;animation:ink .45s ease}
+  @keyframes ink{from{transform:translateY(7px)}to{transform:none}}
+  .under p:first-child,.face p:first-child{text-indent:0}
+  .under p:first-child::first-letter,.face p:first-child::first-letter{font-size:2.3em;
+     float:left;line-height:.86;padding:.05em .1em 0 0;
+     color:var(--cover);text-shadow:1px 1px 0 rgba(212,175,55,.5)}
+  .under p.blank,.face p.blank{opacity:.3;text-align:center;text-indent:0}
+  .folio{position:absolute;bottom:2px;font-size:11px;letter-spacing:.2em;color:#9b8763}
+  /* ---------- navigation ---------- */
+  /* ---------- tools ---------- */
+  #tools{position:relative;z-index:8;display:flex;gap:7px;align-items:center;
+         justify-content:center;flex-wrap:wrap;padding:6px 16px 2px;max-width:900px;
+         width:100%;margin:0 auto}
+  .tb{padding:7px 13px;border-radius:99px;cursor:pointer;font-family:inherit;
+      font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#c6b49b;
+      background:rgba(255,255,255,.045);border:1px solid rgba(212,175,55,.26);
+      transition:color .16s,border-color .16s,background .16s}
+  .tb:hover{color:var(--gold);border-color:rgba(212,175,55,.6);background:rgba(212,175,55,.09)}
+  .tb.nav{padding:9px 20px;font-size:11.5px}
+  .tb:disabled{opacity:.28;cursor:default;color:#7d6f8d}
+  .tb:disabled:hover{color:#7d6f8d;border-color:rgba(212,175,55,.26);background:rgba(255,255,255,.045)}
+  /* ---------- playback ---------- */
+  #bar{position:relative;z-index:8;padding:8px 18px 14px;display:flex;align-items:center;
+       gap:13px;max-width:900px;width:100%;margin:0 auto}
+  .btn{flex:0 0 auto;width:46px;height:46px;border-radius:50%;cursor:pointer;
+       border:1px solid rgba(212,175,55,.5);
+       background:radial-gradient(circle at 35% 30%,#5d2740,#2b1020);
+       color:var(--gold);font-size:17px;display:grid;place-items:center;
+       box-shadow:0 0 18px rgba(212,175,55,.22);transition:transform .16s,box-shadow .16s,opacity .16s}
+  .btn:hover{transform:scale(1.07);box-shadow:0 0 28px rgba(212,175,55,.42)}
+  .btn.off{opacity:.45}
+  .track{flex:1;position:relative;display:flex;align-items:center;height:26px}
+  #seek{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;
+        background:linear-gradient(90deg,var(--gold) var(--p,0%),rgba(255,255,255,.12) var(--p,0%));
+        outline:none;cursor:pointer}
+  #seek::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+        background:radial-gradient(circle at 35% 30%,#fff2c4,var(--gold));
+        box-shadow:0 0 12px rgba(212,175,55,.8);cursor:grab}
+  #seek::-moz-range-thumb{width:17px;height:17px;border:0;border-radius:50%;
+        background:radial-gradient(circle at 35% 30%,#fff2c4,var(--gold));
+        box-shadow:0 0 12px rgba(212,175,55,.8)}
+  #marks{position:absolute;left:0;right:0;top:50%;height:6px;transform:translateY(-50%);pointer-events:none}
+  .mk{position:absolute;top:50%;width:2px;height:10px;transform:translate(-50%,-50%);
+      background:rgba(255,236,170,.4);border-radius:2px}
+  #time{flex:0 0 auto;font-size:12px;letter-spacing:.08em;color:#b9a8c9;
+        font-variant-numeric:tabular-nums;min-width:104px;text-align:right}
+  #pg{color:var(--gold)}
+  #intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;
+         background:radial-gradient(ellipse at 50% 45%,rgba(30,14,58,.9),rgba(4,2,10,.97))}
+  #intro.hide{display:none}
+  #intro h2{font-size:clamp(22px,4vw,40px);color:var(--gold);letter-spacing:.14em;font-weight:400;
+     text-shadow:0 0 30px rgba(212,175,55,.5);text-align:center}
+  #intro p{color:#9d8fb0;font-size:12px;letter-spacing:.26em;text-transform:uppercase;
+     margin-top:12px;text-align:center;padding:0 18px}
+  #go{margin-top:28px;padding:14px 40px;border-radius:99px;cursor:pointer;font-family:inherit;
+      font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:#1c0d06;
+      background:linear-gradient(180deg,#f0d585,var(--gold));border:none;
+      box-shadow:0 0 34px rgba(212,175,55,.5);transition:transform .16s}
+  #go:hover{transform:scale(1.05)}
+  @media(max-width:680px){#book{aspect-ratio:3/4}#time{min-width:86px;font-size:11px}}
+  @media(prefers-reduced-motion:reduce){
+    #candle,.mote,.under p,.face p{animation:none!important}
+    #turn{transition-duration:.01ms!important}
+    .cover{transition-duration:.3s!important}}
+</style>
+</head>
+<body>
+<video id="bg" playsinline preload="auto" src="videoplayback%20(1).mp4"></video>
+<div id="veil"></div>
+<div id="candle"></div>
+<div id="dust"></div>
+
+<header>
+  <h1>CELLPHONE</h1>
+  <p>Maikling kwento ng Tagalog</p>
+</header>
+
+<div id="stage">
+  <div id="book">
+    <div class="stage">
+      <div class="under" id="uL"></div>
+      <div class="under" id="uR"></div>
+      <div id="turn">
+        <div class="face front" id="turnF"></div>
+        <div class="face back" id="turnB"></div>
+        <div id="curl"></div>
+      </div>
+      <div id="cast"></div>
+      <div class="gutter"></div>
+    </div>
+    <div class="cover" id="covR"></div>
+    <div class="cover" id="covL"></div>
+  </div>
+</div>
+
+<div id="tools">
+  <button class="tb nav" id="prevBtn" aria-label="Previous page">&#9664;&nbsp; Nauna</button>
+  <button class="tb nav" id="nextBtn" aria-label="Next page">Susunod &nbsp;&#9654;</button>
+</div>
+
+<div id="bar">
+  <button id="play" class="btn" aria-label="Play">&#9654;</button>
+  <div class="track">
+    <input id="seek" type="range" min="0" max="100" value="0" step="0.05">
+    <div id="marks"></div>
+  </div>
+  <div id="time"><span id="pg">&mdash;</span> &nbsp; <span id="tc">00:00 / 00:00</span></div>
+  <button id="sound" class="btn" aria-label="Toggle page sound">&#9834;</button>
+</div>
+
+<div id="intro"><div>
+  <h2>CELLPHONE</h2>
+  <p>Isang aklat na nagbabasa sa'yo</p>
+  <button id="go">Simulan</button>
+</div></div>
+
+<script>
+const REP = {"GLUED": {"atbakitkailangan": "At bakit kailangan", "bakitkailangan": "Bakit kailangan", "cellphonemaiklingkwentong": "Cellphone. Maikling kwento ng", "disintegratedisintegrate": "Disintegrate", "halosmapasigaw": "Halos na pasigaw", "hindinaiintindihanng": "Hindi na intindihan ng", "jaypinagmasdan": "Jay pinagmasdan", "kangnakalanghap": "Kang nakalanghap", "nasaikalawangpalapag": "nasa ikalawang palapag", "nagpatuloysiya": "Nagpatuloy siya", "nagsimulanagsimulasiyangsiyang": "Nagsimula siyang", "nalimutannalimutan": "Nalimutan", "nalulungkotnalulungkotlang": "Nalulungkot lang", "natuwanatuwasi": "Natuwa si", "ngboseskanyang": "ng boses kanyang", "nginstatravelcute": "ng Instatravel cute", "ngkanilangbuilding": "ng kanilang building", "ngkanyangkanyang": "ng kanyang kanyang", "ngmukhakanyang": "ng mukha kanyang", "ngtelecommunication": "ng telecommunication", "pakiramdampakiramdamniya": "Pakiramdam niya", "roxasboulevard": "Roxas Boulevard", "sinubukanniyang": "Sinubukan niyang", "angkanilangkomunikasyon": "ang kanilang komunikasyon", "angmausopagtetext": "ang mauso pag-text", "angnagmamadalinghakbangpapuntang": "ang nagmamadaling hakbang papuntang", "angniyakanyangkwarto": "ang niya kanyang kwarto", "atbellboydolmen": "at bellboy Dolmen", "athinayaansiyang": "at hinaya an siyang", "atnapansinniyang": "at napansin niyang", "atpinagdikitpinagdikitdikit": "at pinagdikit dikit", "atsinalubongsiya": "at sinalubong siya", "ayparangnauunawaan": "ay parang nauunawaan", "baclaranbaclaran": "Baclaran", "baniyangnalulungkot": "baniya ng nalulungkot", "buongsimbahansimbahanbilangbilang": "buong simbahan bilang-bilang", "cellphonecellphoneniyang": "Cellphone. Cellphone niyang", "communitybuilding": "community building", "contactitinuro": "contact, ito nuro", "datingkinatatayuanng": "dating kinatatayuan ng", "ditoditonagtatapos": "dito, dito nagtatapos", "gitnanggitnangpatungan": "gitnang-gitnang patungan", "hangganghanggangbataan": "hanggang hanggang bataan", "hangganghangganginidoro": "hanggang hanggang inidoro", "hinawakanhinawakan": "hinawakan", "ibonglumilipad": "ibong lumilipad", "instatravelcute": "instatravel cute", "iyongiyongbagay": "iyong-iyong bagay", "kanilangbuilding": "kanilang building", "kaniyangkaniyanganak": "kaniyang kaniyang anak", "kanyangangdumi": "kanyang ang dumi", "kanyangkanyang": "kanyang kanyang", "kanyangkanyangkwarto": "kanyang-kanyang kwarto", "kaya'yomagigingginintuan": "kaya'y o magiging ginintuan", "kaya'ymalalagasdepende": "kaya'y malalagas depende", "kwentongcellphone": "kwento ng cellphone", "lumabaslumabas": "lumabas", "lumambottumigasdumulas": "lumabot, tumigas, dumulas", "lungkothindimatanggal": "lungkot. Hindi matanggal", "madalisiyangmakalimot": "madalisiyang makalimot", "magmukhangluma": "magmukhang luma", "malakingimageprovider": "malaking image provider", "mapagaanmapagaan": "mapagaan-mapagaan", "mganaroroonimahe": "mga naroroon, imahе", "milyungmilyong": "milyung milyong", "mukhangtuwingkailanganniyang": "mukha. Ng tuwing kailangan niyang", "naalaalangbumabalik": "naalaalang bumabalik", "nagsisilbingmonitor": "nagsisilbing monitor", "nahihirapanakong": "nahihirapan akong", "naidinisenyopara": "naidinesenyo para", "nakakonektasiya": "nakakonekta, siya", "nakasulatnakasulat": "nakasulat", "nalamangmapapanood": "nalaman mapapanood", "namanmagsusulatkung": "naman, magsusulat kung", "nanakatayomalapit": "nanakatayo, malapit", "nangyarinangyaridoon": "nangyari. Doon", "natandaannatandaan": "natandaan", "natatandaanniya": "natatandaan niya", "nilapitnilapit": "nilapit", "niya'ykailangan": "niya'y kailangan", "niyamatandaanhuminto": "niya matandaan, huminto", "niyanaramdaman": "niya naramdaman", "niyaniyamaintindihankung": "niya niya maintindihan kung", "noongnagkaroon": "noong nagkaroon", "paglilipatpaglilipat": "paglilipat", "pakiramdampakiramdam": "pakiramdam", "panahonpanahon": "panahon", "panahonpanahondrawer": "panahon, drawer", "peroperonakapaloob": "pero onaka", "pintuanpintuannakatingin": "pintuan nakatingin", "receiverbutton": "receiver button", "ringinustonaman": "rin. Ginusto na man", "sakanyangcabinet": "sakanyang cabinet", "sanagsasalitang": "sa nagsasalitang", "sapagbungatpagbagsak": "sa pagbunat, pagbagsak", "sapaglalakadkatulad": "sa paglalakad katulad", "siya'tlangnaroroon": "siya't lang. Naroroon", "siyangmaglakad": "siyang maglakad", "siyangmaintindihansa": "siyang maintindihan sa", "siyangsiyanggumagalaw": "siyang gumagalaw", "tigilantigilan": "tigil-antigilan", "totoongtotoong": "totoong totoong", "transmitterreceiver": "transmitter receiver", "tumalontumalonlumitaw": "tumaon, tumalon lumitaw", "tumangotumango": "tumaon, tumango", "usongtechnological": "usong technological", "paanomag": "paano mag", "paanomagtext": "paano mag-text", "siyangayon": "siya'y ayon", "siya'yhindi": "Siya'y hindi", "siyanaturuan": "siya natuturan", "nungnung": "nung", "angmga": "ang mga", "angang": "ang ang", "parapara": "para, para", "arawrawna": "araw-araw na", "langnoong": "lang, noong", "atngayo'y": "at ngayo'y", "niyaniya": "niya, niya", "kungalam": "kung alam", "bagongklaseng": "bagong klaseng", "binigyansiyang": "Binigyan siyang", "nagiisang": "nag-iisang", "jaysijay": "Jay si Jay", "paradawmasmadaling": "para daw, mas madaling", "sasa": "sa sa", "sakaniyakungkaniya": "sa kaniya, kung sa kaniya", "kayangelamang": "kaya nang lamang", "ngmakalimotng": "ng makalimot ng", "bagaymgabagay": "bagay-magabagay", "ayparang": "ay parang", "ngpagkain": "ng pagkain", "kanyangbad emonitoraynasa": "kanyang, 'yung monitor ay nasa", "ibigsabihin": "Ibig sabihin", "aysabihin": "ay sabihin", "pumulaang": "pumula, ang", "ayangbungon": "yang", "gamitinangmga": "gamitin ang mga", "aparatomakina": "aparato, makina", "matindihang": "maintindihan", "nag-iisang": "nag-iisang", "usongteknolohikal": "usong teknolohikal", "nyang": "nyang", "gamon": "gamon", "gampagkatol": "gampagkatol", "malapitang": "malapit ang", "noonong": "noon, 'yong", "nungmapag": "nung mapag", "ngkatulad": "ng katulad", "gumagalawang": "gumagalaw ang", "itong": "itong", "inyong": "inyong", "niyang": "niyang", "mapapag": "mapapag", "tungkol": "tungkol"}, "SIMPLE": {"cel": "cell", "humintu": "huminto", "kuwentong": "kwentong", "instatravelcute": "insta travel cute", "bentean": "bente, an", "kaunlaran": "kaunlaran", "tapaglilipat": "tapaglipat", "bongun": "bungon"}, "PHRASES": {"main, tindihan": "maintain", "Na lulungkot": "Nalulungkot", "na lulungkot": "nalulungkot", "Kayang alamang": "Kaya'y alamang", "kayang alamang": "kaya'y alamang", "kinapaang": "kinapa ang", "Nihindi": "Hindi", "nihindi": "hindi", "maiklink": "maikling", "celpong": "cellphone", "Hindi na maatanda": "Hindi na matanda", "hindi na maatanda": "hindi na matanda", "nasa pulan na": "nasa pula na", "Matagal, matagal na": "Matagal na", "siya hindi siya": "siya'y", "siya, siya": "siya'y", "nag-iisang": "nag-iisang", "Mapasigaw": "mapasigaw", "tutuosin": "tutuosin"}};
+const BAKED_SRT = "1\n00:00:00,110 --> 00:00:16,780\nCell phone, maikling kwentong Tagalog na isinulat ni George De Jesus III. Hindi na matandaan ni J kung paano mag-text sa cellphone niyang 8810.\n\n2\n00:00:16,780 --> 00:00:28,420\nMatagal na matagal na mula nung mauso ang pagte-text. Bente anyos siya noong nagkaroon ng 8810. At ilang taon na siya ngayon?\n\n3\n00:00:28,420 --> 00:00:30,420\nhindi na niya matandaan.\n\n4\n00:00:30,420 --> 00:00:33,420\nHuminto na siya sa pagbilang ng mga taon.\n\n5\n00:00:33,420 --> 00:00:36,420\nMula nang hindi na niya maintindihan,\n\n6\n00:00:36,420 --> 00:00:40,420\nkung paano gamitin ang mga aparato't makina\n\n7\n00:00:40,420 --> 00:00:45,420\npara mapagaan ang araw-araw na pamumuhay ng tao.\n\n8\n00:00:45,420 --> 00:00:47,420\nNalulungkot lang siya.\n\n9\n00:00:47,420 --> 00:00:52,420\nNoong bente anyos siya'y, hindi siya nagpapahuli sa mga\n\n10\n00:00:52,420 --> 00:00:55,420\nusong technological advances at ngayon\n\n11\n00:00:55,420 --> 00:01:02,420\nNi hindi niya alam kung paano gamitin ang bagong klasing cellphone, ang cell.\n\n12\n00:01:02,420 --> 00:01:07,420\nBinigyan siya na nag-iisang anak na si J Jr. ng cell.\n\n13\n00:01:07,420 --> 00:01:09,420\nPara daw mas madaling makontak.\n\n14\n00:01:09,420 --> 00:01:12,420\nItinuro sa kaniya kung paano gamitin ang cell.\n\n15\n00:01:12,420 --> 00:01:19,420\nKaya nga lamang dahil madali siyang makalimot ng mga bagay-bagay ay parang hindi rin siya naturuan.\n\n16\n00:01:19,420 --> 00:01:30,420\nGaya na lang ng pagkain, na alaala lang niya na wala na pala siyang food chips ng makita niya na ang kanyang body monitor ay nasa pula na.\n\n17\n00:01:30,420 --> 00:01:34,420\nIbig sabihin ay nagugutom na siya.\n\n18\n00:01:34,420 --> 00:01:38,420\nDapat bago pa pumula ang bungon ay naitawag na niya agad.\n\n19\n00:01:38,420 --> 00:01:43,420\nAng kaso nga'y inalis na ang iba pang pamamaraan ng telecommunication.\n\n20\n00:01:43,420 --> 00:01:46,420\nAng natira na lang ay ang cell.\n\n21\n00:01:46,420 --> 00:01:54,280\nThe only phone you'll ever need. Pumikit si J at kinapa ang power on na button sa\n\n22\n00:01:54,280 --> 00:02:01,000\nkanyang noo. Inisip niya ang muka ng kanyang anak na halos mapasigaw siya sa\n\n23\n00:02:01,000 --> 00:02:07,560\nmabilis na paglilipat-lipat ng mga imahen na muka sa kanyang utak na kung\n\n24\n00:02:07,560 --> 00:02:11,680\ntutuosin ay hindi naman talaga sa utak na ilumilitaw ang mga imahen kundi sa\n\n25\n00:02:11,680 --> 00:02:18,320\ntransmitter/receiver ng cell. Pilit niyang hinahanap ang mukha ng kanyang anak.\n\n26\n00:02:18,320 --> 00:02:23,160\nBigla sa gitna ng mga muka'y, tumalon lumitaw si J Jr.\n\n27\n00:02:23,160 --> 00:02:31,480\n\"Hi dad!\" Sigaw nito. Nagulat si J. Nagdilim ang lahat para sa kanya.\n\n28\n00:02:31,480 --> 00:02:35,360\nSa dilim ay narinig niya ang tinig ng kanyang anak.\n\n29\n00:02:35,360 --> 00:02:40,560\n\"Dad! Dad, are you okay?\" Tanong ni J Jr.\n\n30\n00:02:40,560 --> 00:02:46,080\nDumilat si J. Nakakonekta pa rin ang cell niya.\n\n31\n00:02:46,080 --> 00:02:50,440\nNaramdaman niya sa kanyang noo ang mahinang ugong nito.\n\n32\n00:02:50,440 --> 00:02:57,540\nSinubukan niyang ipokus ang tingin sa nagsasalitang anak na nadiskonek for a while.\n\n33\n00:02:57,540 --> 00:02:59,240\n\"Kaka-musta?\"\n\n34\n00:02:59,240 --> 00:03:02,140\n\"Ayos lang\", tugon ng kanyang anak.\n\n35\n00:03:02,140 --> 00:03:05,060\n\"Glad, you are using cell.\"\n\n36\n00:03:05,060 --> 00:03:06,740\nTumango na si J.\n\n37\n00:03:06,740 --> 00:03:09,140\nSa isip ni J ay kumakaway siya.\n\n38\n00:03:09,140 --> 00:03:11,140\nKumaway rin ang anak niya.\n\n39\n00:03:11,140 --> 00:03:15,940\nNawala si J Jr., tapos na ang kanilang komunikasyon.\n\n40\n00:03:16,940 --> 00:03:20,540\nPinindot ni J ang kanyang noo, nawala ang ugong.\n\n41\n00:03:21,340 --> 00:03:22,940\nHindi na siya connected.\n\n42\n00:03:23,740 --> 00:03:29,940\nSaka lang niya naalala, na hindi niya nasabi sa kanyang anak ang kanyang pakay.\n\n43\n00:03:30,940 --> 00:03:34,540\nMagugutom na siya, kailangan niya ng food chips.\n\n44\n00:03:35,140 --> 00:03:36,940\nLalo lang nalungkot si J.\n\n45\n00:03:36,940 --> 00:03:40,280\nPinagmasdan niya ang kanyang kwarto.\n\n46\n00:03:40,280 --> 00:03:43,160\nKumpleto ito sa makabagong gamit.\n\n47\n00:03:43,160 --> 00:03:48,600\nLahat ng kailangan niya ay kailangan lang niyang sabihin at bigkasin\n\n48\n00:03:48,600 --> 00:03:52,520\ndahil sa voice controlled ang lahat ng gamit.\n\n49\n00:03:52,520 --> 00:03:54,280\nMula kama.\n\n50\n00:03:54,280 --> 00:03:58,960\nKung gusto niyang lumambot, tumigas, dumulas, sabihin lang niya.\n\n51\n00:03:58,960 --> 00:04:00,520\nHanggang inidoro.\n\n52\n00:04:00,520 --> 00:04:04,520\nKung gusto niyang hugasan siya, punasan siya o i-disintegrate.\n\n53\n00:04:04,520 --> 00:04:07,860\nang kanyang dumi, bago paman lumubas.\n\n54\n00:04:09,120 --> 00:04:12,460\nGinusto rin naman niya ang lahat ng iyon noon.\n\n55\n00:04:12,960 --> 00:04:19,940\nHinawakan niya muli ang 8810 at naramdaman niya ang lungkot na hindi mo tanggal-tanggal.\n\n56\n00:04:19,940 --> 00:04:23,540\nYung lungkot dahil sa lumipas na panahon.\n\n57\n00:04:24,040 --> 00:04:28,480\nDrawer, sabi ni J at bumukas ang kanyang drawer.\n\n58\n00:04:29,220 --> 00:04:33,120\nPapel, sabi ni J at walang nangyari.\n\n59\n00:04:33,120 --> 00:04:47,120\nSa kalang niyan naalala, wala na nga pa lang papel. Wala na rin panulat. Bakit nga naman magsusulat kung pwede mong kausapin ang gusto mong sulatan face-to-face, in real life images?\n\n60\n00:04:47,120 --> 00:04:51,910\nTotoong-too ang mga itsura pero imahen pa rin.\n\n61\n00:04:52,910 --> 00:04:58,910\nTumayo si J at napansin niyang wala na ring bintana ang kanyang kwarto.\n\n62\n00:04:58,910 --> 00:05:03,310\nKailan nga ba na uso ang bintana? Bakit nga ba may bintana?\n\n63\n00:05:04,190 --> 00:05:08,030\nAng mayroon sa kwarto niya ay isang image provider.\n\n64\n00:05:08,830 --> 00:05:15,150\nSabihin lang niya kung ano ang gusto niyang makita at makita niya mula sa mga tanawin,\n\n65\n00:05:15,510 --> 00:05:18,070\ndagat hanggang sa mga tanawing bundok.\n\n66\n00:05:18,830 --> 00:05:20,590\nBakit kailangan ng bintana?\n\n67\n00:05:20,990 --> 00:05:26,190\nAng image provider din ang nagsisilbing monitor ng kanyang computer.\n\n68\n00:05:26,190 --> 00:05:31,610\nNaisip niya na padalhan na lang niya si J Jr ng cell mail.\n\n69\n00:05:31,610 --> 00:05:35,290\nKaya nga lang, kailangan na nakakonekta siya.\n\n70\n00:05:35,290 --> 00:05:37,690\nAyaw niyang kumonekta.\n\n71\n00:05:37,690 --> 00:05:41,770\nAyaw niyang makita ang mabilis at papalit-palit ng mga muka.\n\n72\n00:05:41,770 --> 00:05:44,250\nTuwing kailangan niyang kumonekta.\n\n73\n00:05:44,250 --> 00:05:50,130\nAng pakaramdam niya ay nakikita rin siya ng milyong-milyong muka na iyon.\n\n74\n00:05:50,130 --> 00:05:55,090\nPakiramdam niya ay pinapanood siya pero hindi siya nakikita.\n\n75\n00:05:55,090 --> 00:06:03,340\nPumunta si J sa kabinet niya ng mga antique para isauli ang kanyang 8810.\n\n76\n00:06:03,340 --> 00:06:06,840\nIpinatong niya ito sa gitnang patungan.\n\n77\n00:06:06,840 --> 00:06:09,340\nNapansin niya isang kwadradong bagay.\n\n78\n00:06:09,340 --> 00:06:12,340\nInabot niya iyon at binuksan.\n\n79\n00:06:12,340 --> 00:06:16,340\nWala siyang maintindihan sa mga nakaguhit doon.\n\n80\n00:06:16,340 --> 00:06:18,340\nMay bigla siyang naalala.\n\n81\n00:06:18,340 --> 00:06:23,840\nPero hindi niya mailagay sa lugar kung tungkol saan ang bagay na hawak niya.\n\n82\n00:06:23,840 --> 00:06:26,480\nWalang kahit anong pindutan ng bagay\n\n83\n00:06:26,480 --> 00:06:30,240\nkapag binuksan ay mga pirasong papel\n\n84\n00:06:30,240 --> 00:06:31,800\nnatigilan siya.\n\n85\n00:06:31,800 --> 00:06:32,880\nPapel.\n\n86\n00:06:32,880 --> 00:06:35,880\nGanon nga ang itsura at pakiramdam ng papel.\n\n87\n00:06:35,880 --> 00:06:38,440\nPuno iyong bagay na iyon ng papel.\n\n88\n00:06:38,440 --> 00:06:42,640\nPantay-pantay at nakadikit sa isang gilid.\n\n89\n00:06:42,640 --> 00:06:47,680\nKung tutuosin, iyong mga bagay ay mga papel at pinagdikit-dikit.\n\n90\n00:06:47,680 --> 00:06:51,000\nAlam niya kung anong mga bagay na iyon\n\n91\n00:06:51,000 --> 00:06:54,280\nkaya lang ay hindi niya talagang matandaan.\n\n92\n00:06:55,800 --> 00:06:57,720\nSumasakit ang ulo niya.\n\n93\n00:06:58,520 --> 00:07:04,000\nNagpasya siyang lumabas ng kanyang kwarto at magpunta sa bahay ng kanyang anak.\n\n94\n00:07:04,920 --> 00:07:07,520\nBumukas ang pinto at lumabas siya.\n\n95\n00:07:08,440 --> 00:07:12,320\nDala-dala pa rin niya ang bagay na gawa sa papel.\n\n96\n00:07:12,920 --> 00:07:19,480\nIlang beses siyang palinga-linga, bago niya natandaan kung paano umalis sa bahay niya.\n\n97\n00:07:19,480 --> 00:07:21,780\nnagsimula siyang maglakad.\n\n98\n00:07:21,780 --> 00:07:25,980\nAng kwarto niya ay nasa loob ng isang community building\n\n99\n00:07:25,980 --> 00:07:28,980\nna nakatayo malapit sa Manila Bay.\n\n100\n00:07:28,980 --> 00:07:33,680\nMinsan, kapag lumalabas siya'y iniisip niya\n\n101\n00:07:33,680 --> 00:07:37,980\nkung Manila Bay pa nga ba yung nakikita niya o imahen na rin lamang.\n\n102\n00:07:37,980 --> 00:07:39,980\nAsul na asul kasi ang kulay\n\n103\n00:07:39,980 --> 00:07:44,480\nat kapag inamoy mo ang simoy galing dito'y para kang nakalanghap\n\n104\n00:07:44,480 --> 00:07:46,480\nng imported na pabango.\n\n105\n00:07:46,480 --> 00:07:52,000\nAng mga instravel chute ng kanilang building ay voice-operated din.\n\n106\n00:07:52,000 --> 00:08:01,360\nMaaring sabihin lang ang numero at address ng bahay ng anak niya at lilitaw na siya sa mismong bahay ni J Jr.\n\n107\n00:08:01,360 --> 00:08:11,320\nPero hindi niya iyon ginawa. Ground floor ang sabi ni J at natagpuan niya ang sarili sa ground floor ng kaniyang building.\n\n108\n00:08:11,320 --> 00:08:15,120\nNakita niya agad ang Manila Bay na naalala niya.\n\n109\n00:08:15,120 --> 00:08:21,620\nLumabas siya ng building at sinulubong siya ng halimuyak ng imported na pabango.\n\n110\n00:08:21,620 --> 00:08:27,620\nHindi na uso ang mga sasakyan dahil nga sa Instatravel Chute na nakalagay sa lahat ng mga tahanan.\n\n111\n00:08:27,620 --> 00:08:35,620\nKahit saan mo nais magpunta, isipin mo lang at \"be there in the blink of an eye.\"\n\n112\n00:08:35,620 --> 00:08:44,120\nWalang traffic at bakit kailangan pang lumabas kayong lahat ng naisin mo ay maari mong makuha sa loob ng sarili mong bahay?\n\n113\n00:08:44,120 --> 00:08:53,120\nGamitin lang ang cell. Nagsimula siyang maglakad. Siya lang ang nakaisip na gawin iyon ng araw na iyon.\n\n114\n00:08:53,120 --> 00:09:02,120\nWalang tao sa paligid. Nilakad niya ang dating coastal road na hindi na coastal dahil wala ng coast sa banda roon.\n\n115\n00:09:02,120 --> 00:09:10,120\nUmusod na hanggang bataan ang coast. Isang dahilan kaya alam niyang imahen lang ang Manila Bay na nakita niya.\n\n116\n00:09:10,120 --> 00:09:17,120\nmawawala kapag may napindot na boton, pati nga langit sa tingin niya'y image-induced.\n\n117\n00:09:17,120 --> 00:09:21,120\nMay mga ibong lumilipad pero parang mga makina.\n\n118\n00:09:21,120 --> 00:09:26,120\nMas dumami ang mga puno kaya lang, bawat isa'y may mga pindutan.\n\n119\n00:09:26,120 --> 00:09:30,120\nNakita niya iyon sa isang programa.\n\n120\n00:09:30,120 --> 00:09:37,120\nPipindutin mo lang daw iyon at kakapal lalo ang dahon o kaya magiging ginuntuan o kaya malalagas.\n\n121\n00:09:37,120 --> 00:09:44,720\ndepende sa kung anong panahon ang ibig makita. Naglakad siya nang naglakad.\n\n122\n00:09:44,720 --> 00:09:51,600\nBawat hakbang niya'y parang isang paraiso na alaalang bumabalik sa kaniya.\n\n123\n00:09:51,600 --> 00:09:56,880\nDoon dati nakatayo ang coastal mall ngayo'y isa na ring community building.\n\n124\n00:09:56,880 --> 00:10:03,280\nNandoon pa rin ang Baclaran pero nakapaloob na sa isang glass case ang\n\n125\n00:10:03,280 --> 00:10:06,880\nang buong simbahan bilang remnants ng ibang panahon.\n\n126\n00:10:08,080 --> 00:10:10,480\nPati nga mga nagtitinda'y naroroon,\n\n127\n00:10:10,680 --> 00:10:14,880\nmga imahe na rin. Nagpatuloy siya sa paglalakad.\n\n128\n00:10:15,280 --> 00:10:20,680\nKatulad ng Baclaran ay nasa loob na rin ng glass case ang CCP.\n\n129\n00:10:21,280 --> 00:10:25,280\nMas malaki nga lang at ang fountain sa harap nito'y\n\n130\n00:10:25,480 --> 00:10:28,280\ndi na tumitigil sa pagbuga't pagbagsak.\n\n131\n00:10:28,280 --> 00:10:37,880\nNarating niya ang dulo ng dating Roxas Boulevard at umabot siya sa Luneta na isang malaking image provider na lamang.\n\n132\n00:10:37,880 --> 00:10:46,400\nMapapanood mo ang mga nangyari doon mula pagkamatay ni Rizal hanggang sa kasalukuyan na parang totooong-totoo.\n\n133\n00:10:46,400 --> 00:10:56,100\n Noong dumaan si J, ang nakita niya ay ang meeting de avanse ni Cory noong 1986.\n\n134\n00:10:56,100 --> 00:11:02,100\nPinanood niya sa glit ang mga imahen sa malaking image provider.\n\n135\n00:11:02,100 --> 00:11:09,100\nMay nakita siyang gumagalaw na hindi dapat naroroon sa palabas.\n\n136\n00:11:09,100 --> 00:11:13,100\nIpis. Tinapakan niya ito.\n\n137\n00:11:13,100 --> 00:11:18,100\nPinulot niya ang napisang ipis at tiningnan nang maigi iyon.\n\n138\n00:11:18,100 --> 00:11:22,100\nHindi lang imahen, tunay na ipis,\n\n139\n00:11:22,100 --> 00:11:30,350\nMayroon pa palang ipis, inipit niya ang ipis sa bagay na papel na kaniyang dala-dala.\n\n140\n00:11:30,350 --> 00:11:37,350\nTumawid siya sa dating kinatatayuan ng Manila Hotel na ngayo'y isa na ring community building.\n\n141\n00:11:37,350 --> 00:11:44,330\nDoon nakatira ang kaniyang anak at pamilya nito.\n\n142\n00:11:44,330 --> 00:11:48,330\nHalos hindi nila binago ang itsura ng Manila Hotel.\n\n143\n00:11:48,330 --> 00:11:54,330\nMaliban na lamang sa bellboy at doormen na panay imahen din.\n\n144\n00:11:54,330 --> 00:12:00,490\nPumasok siya sa loob at ginamit ang lifter na idinisenyo para magmukhang luma.\n\n145\n00:12:00,490 --> 00:12:08,210\nUmakyat siya sa hagdan dahil alam niyang nasa ikalawang palapag lamang ang bahay ng anak niya.\n\n146\n00:12:08,210 --> 00:12:16,930\nPagdating niya sa pintuan ng bahay ng kanyang anak ay nag-atubili siya kung kakatok siya o pipindutin ang receiver button.\n\n147\n00:12:16,930 --> 00:12:25,430\nKumatok siya. Matagal bago binuksan ang pinto. Binuksan ito ng isang batang 12 anyos.\n\n148\n00:12:25,430 --> 00:12:28,930\n\"Nandiyan ang dadi mo?\" Tanong niya.\n\n149\n00:12:28,930 --> 00:12:33,430\nTinignan lang siya ng bata na parang hindi siya naiintindihan.\n\n150\n00:12:33,430 --> 00:12:37,930\n\"Who's it?', narinig ni J ang boses ng kanyang anak.\n\n151\n00:12:37,930 --> 00:12:42,430\nSinilip niya ang loob ng bahay ng kanyang anak.\n\n152\n00:12:42,430 --> 00:12:44,930\nKamuka rin ang bahay niya.\n\n153\n00:12:44,930 --> 00:12:52,530\n\"Ako.\", \"dad?\", narinig ni J ang nagmamadaling hakbang papunta ang pintuan.\n\n154\n00:12:52,530 --> 00:12:56,430\nNakatingin pa rin sa kaniya ang bata.\n\n155\n00:12:56,430 --> 00:13:01,930\nBumukas nang tuluyan ang pinto at nakita ni J ang kaniyang anak.\n\n156\n00:13:01,930 --> 00:13:05,930\nHindi lang imahen, anak niya talaga.\n\n157\n00:13:05,930 --> 00:13:11,930\nGusto niyang maiyak. \"Ano ginagawang mo rito?\"\n\n158\n00:13:11,930 --> 00:13:13,930\n\"Naglakad ako.\"\n\n159\n00:13:13,930 --> 00:13:15,930\n\"Ano? Nag-ano?\"\n\n160\n00:13:15,930 --> 00:13:17,930\n\"Naglakad.\"\n\n161\n00:13:17,930 --> 00:13:19,930\n\"Mula sa-?\" \"Oo.\"\n\n162\n00:13:19,930 --> 00:13:21,930\n\"Bakit?\"\n\n163\n00:13:21,930 --> 00:13:25,930\nHindi alam ni J kung paano sagutin ang tanong ng anak.\n\n164\n00:13:25,930 --> 00:13:29,930\nSasabihin ba niyang nalulungkot siya sa kwarto niya?\n\n165\n00:13:29,930 --> 00:13:32,930\nNa natatakot siya sa mga gamit doon,\n\n166\n00:13:32,930 --> 00:13:35,930\nna hindi niya matandaan ang kay raming bagay,\n\n167\n00:13:35,930 --> 00:13:38,930\nna hindi niya alam gamitin ang CELL.\n\n168\n00:13:38,930 --> 00:13:48,930\nkaya siya nandito ngayon. Hindi imahen. Tunay na siya. ang Ama ni J Jr. \"Naubusan ako ng food\n\n169\n00:13:48,930 --> 00:13:57,930\nchips.\", \"Ba't 'di mo sinabi sa cell?\" \"Nalimutan ko\", \"Pumasok ka nga muna.\", pumasok siya sa loob\n\n170\n00:13:57,930 --> 00:14:04,930\nng bahay ng anak, nakaupo siya sa isang silya. Binigyan siya ng anak niya ng isang water chip\n\n171\n00:14:04,930 --> 00:14:09,930\nat saka lang niya naramdaman ang uhaw at pagod.\n\n172\n00:14:09,930 --> 00:14:16,930\nHumingi pa siya ng isa sa anak, nakatingin pa rin sa kaniya ang batang nagbukas ng pinto.\n\n173\n00:14:16,930 --> 00:14:18,930\n\"Anak mo?\"\n\n174\n00:14:18,930 --> 00:14:19,930\n\"Oo!\"\n\n175\n00:14:19,930 --> 00:14:21,930\n\"Ilang taon?\"\n\n176\n00:14:21,930 --> 00:14:22,930\n\"12.\"\n\n177\n00:14:22,930 --> 00:14:24,930\nTumango si J.\n\n178\n00:14:24,930 --> 00:14:26,930\n\"Anong pangalan?\"\n\n179\n00:14:26,930 --> 00:14:27,930\n\"J3.\"\n\n180\n00:14:27,930 --> 00:14:30,930\nUmalis na ang bata at pumasok sa isang kwarto.\n\n181\n00:14:30,930 --> 00:14:33,930\nLumapit kay J si J Jr.\n\n182\n00:14:33,930 --> 00:14:36,430\nNilapit ang kamay sa noo ni J\n\n183\n00:14:36,430 --> 00:14:38,670\nat umiwas naman si J. \"Bakit?\"\n\n184\n00:14:38,670 --> 00:14:39,870\n\"Buksan natin ang cell.\"\n\n185\n00:14:39,870 --> 00:14:41,070\n\"Ayoko!\", \"Bakit?\"\n\n186\n00:14:41,070 --> 00:14:41,790\n\"Ayoko!\"\n\n187\n00:14:41,790 --> 00:14:44,830\n\"Nahihirapan akong makipag-usap sa iyo ng ganito.\n\n188\n00:14:44,830 --> 00:14:46,730\nWalang imahen, panay salita.\"\n\n189\n00:14:46,730 --> 00:14:49,630\nIpinakita ni J ang dala-dala niya sa kanyang anak.\n\n190\n00:14:49,630 --> 00:14:51,130\n\"Libro?\"\n\n191\n00:14:51,130 --> 00:14:53,870\nNagulat si J sa kanyang sinabi.\n\n192\n00:14:53,870 --> 00:14:56,730\nNatandaan niya kung anong bagay iyon.\n\n193\n00:14:56,730 --> 00:14:58,130\nIsang Libro.\n\n194\n00:14:58,130 --> 00:14:59,630\nBinabasa.\n\n195\n00:14:59,630 --> 00:15:02,270\nMay mga nakasulat sa loob ng mga salita.\n\n196\n00:15:02,270 --> 00:15:04,910\nMga salita iyong guhit na nakita niya.\n\n197\n00:15:04,910 --> 00:15:08,070\nNatuwa si J na natatandaan niya. \"Ano? Libro?\"\n\n198\n00:15:08,670 --> 00:15:11,270\nNakita niyang hindi naiintindihan ng anak niya.\n\n199\n00:15:11,670 --> 00:15:17,270\nBinuksan ni J para sa anak at ipinakita ang nakita niyang ipis sa Luneta.\n\n200\n00:15:17,510 --> 00:15:20,430\n\"Ipis? Dad! Ano ba yung mga dala-dala mo?\"\n\n201\n00:15:21,150 --> 00:15:23,750\nPinigil ni J ang sarili na umiyak.\n\n202\n00:15:24,750 --> 00:15:31,870\nHindi niya alam kung bakit pero parang bigla siyang sinuntok ng kalungkutan at gusto niyang umiyak\n\n203\n00:15:32,270 --> 00:15:37,670\nnang umiyak. Hinawakan siya ng anak niya sa noo at binuksan ang cell.\n\n204\n00:15:37,670 --> 00:15:41,810\nNabigla si J, lumitaw na naman ng mga imahen,\n\n205\n00:15:41,810 --> 00:15:44,930\nhuminto ang mga muka sa anak niya.\n\n206\n00:15:44,930 --> 00:15:50,610\nSa loob ng cell ay parang naunawaan siya ng kaniyang anak.\n\n207\n00:15:50,610 --> 00:15:57,770\nSa loob ng cell ay inakbayan pa siya nito at hinayaan siyang umiyak nang umiyak.\n\n208\n00:15:57,770 --> 00:16:10,770\nNang tumigil siya, nasa loob na siya ng Instatravel chute, kumurap lang siya at naroroon na ulit sa harapan ng kanyang kwarto.\n\n209\n00:16:10,770 --> 00:16:14,770\nPumasok siya sa loob at isinara ang pinto.\n\n210\n00:16:14,770 --> 00:16:24,770\nLumapit siya sa kanyang kabinet ng mga antique, binuksan niya't, pinulot ang ipis para ilagay sa kanyang kabinet.\n\n211\n00:16:24,770 --> 00:16:29,570\nPagkaraan, dala-dala ang libro at naupo siya sa kanyang kama.\n\n212\n00:16:29,570 --> 00:16:35,450\nBinuksan niya ang libro at pilit na binasa ang unang pahina.\n\n213\n00:16:35,450 --> 00:16:38,890\nHindi siya sanay sa dire-diretsong mga salita.\n\n214\n00:16:38,890 --> 00:16:51,350\nAng kinasanay niya ay: C U L8R. FYI. UR HSE. TC. TEXT ME.\n\n215\n00:16:51,350 --> 00:17:02,810\nPero nagpasiya siyang tandaan muli ang lahat.\n\n216\n00:17:02,810 --> 00:17:06,610\nBabasahin niya ang aklat na iyon.\n\n217\n00:17:06,610 --> 00:17:09,810\nMabagal niyang binasa ang pangalan ng may akda.\n\n218\n00:17:10,810 --> 00:17:15,310\nL-E-W-I-S C-A-R-O-L-L\n\n219\n00:17:15,310 --> 00:17:21,670\nAt ang pamagat ng libro, A-L-I-C-E I-N W-....\n\n220\n00:17:21,670 --> 00:17:33,550\n\n\n221\n00:17:33,550 --> 00:17:34,870\n\n\n";
+
+/*CORE-START*/
+function createBook(deps){
+  const {uL,uR,turn,turnF,turnB,cast,onFlip,dur,render} = deps;
+  /* pages are read through deps every time, so the caller can repack them
+     (after an upload or a save) without rebuilding the turn logic */
+  const pair = k => { const P = deps.pages; return [P[2*k] || null, P[2*k+1] || null]; };
+  const nSpreads = () => Math.ceil(deps.pages.length / 2);
+  const html = render || (p => p
+    ? p.l.map(c => '<p>' + (c && c.x !== undefined ? c.x : c) + '</p>').join('')
+    : '<p class="blank">&mdash;</p>');
+
+  let shown = 0, turning = false, tok = 0, pending = -1;
+
+  function prepare(k){
+    const L = pair(k), N = pair(k + 1);
+    uL.innerHTML    = html(L[0]);
+    uR.innerHTML    = html(N[1]);
+    turnF.innerHTML = html(L[1]);
+    turnB.innerHTML = html(N[0]);
+    /* snap home without animating. Never set an inline transform here: it would
+       outrank the .turning class and the leaf would silently stop turning. */
+    turn.classList.add('nomo');
+    turn.classList.remove('turning');
+    void turn.offsetWidth;
+    turn.classList.remove('nomo');
+    if (cast) cast.classList.remove('lit');
+    shown = k;
+    return k;
+  }
+
+  function turnOnce(){
+    if (turning) return shown;
+    turning = true;
+    pending = shown + 1;
+    const my = ++tok;
+    const right = deps.pages[2 * shown + 1];
+    const span = Math.max(0.7, Math.min((dur ? dur(right) : 9) * 0.85, 2.2));
+    turn.style.setProperty('--turndur', span.toFixed(2) + 's');
+    turn.classList.add('turning');
+    if (cast) cast.classList.add('lit');
+    if (onFlip) onFlip();
+
+    let finished = false;
+    const finish = () => {
+      if (finished || my !== tok) return;
+      finished = true;
+      turn.removeEventListener('transitionend', onEnd);
+      prepare(shown + 1);
+      turning = false;
+      pending = -1;
+    };
+    const onEnd = e => {
+      /* transitionend bubbles: #curl fades opacity over .35s and that used to
+         complete the flip early. Only our own transform counts, and the listener
+         must survive those, hence no {once:true}. */
+      if (e && e.target && e.target !== turn) return;
+      if (e && e.propertyName && e.propertyName !== 'transform') return;
+      finish();
+    };
+    turn.addEventListener('transitionend', onEnd);
+    setTimeout(() => { if (my === tok && turning) finish(); }, (span + 0.6) * 1000);
+    return shown;
+  }
+
+  function go(i, animate){
+    i = Math.max(0, Math.min(nSpreads() - 1, i));
+    if (i === shown) return shown;
+    if (turning){
+      if (i === pending) return shown;      /* already flipping there */
+      tok++; prepare(i); turning = false; pending = -1; return shown;
+    }
+    if (!animate || Math.abs(i - shown) > 1){ prepare(i); return shown; }
+    turnOnce();
+    return shown;
+  }
+
+  return {prepare, turnOnce, go, pair,
+          get shown(){return shown;}, get turning(){return turning;}};
+}
+/*CORE-END*/
+
+
+const LS_KEY = null;   /* editing removed: the baked SRT is always the source */
+const vid  = document.getElementById('bg'), seek = document.getElementById('seek');
+const tc   = document.getElementById('tc'), pgEl = document.getElementById('pg');
+const playBtn = document.getElementById('play'), soundBtn = document.getElementById('sound');
+const bookEl  = document.getElementById('book');
+const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn');
+
+/* ---------------- SRT pipeline (mirror of clean_srt.py) ---------------- */
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* keep milliseconds: splitting on '.' as well would silently drop them, which
+   skews every cue duration and corrupts timings on export */
+const tsec = t => { const p = String(t).split(/[:;,]/).map(Number);
+                    return p[0]*3600 + p[1]*60 + p[2] + (p[3] || 0)/1000; };
+const pad3 = s => String(s).slice(0,3).padEnd(3,'0');
+
+function parseSrt(text){
+  const cues = [];
+  const blocks = String(text).replace(/^\uFEFF/,'').trim().split(/\n\s*\n/);
+  const TIM = /(\d{1,2}:\d{2}:\d{2})[,.](\d+)\s*-->\s*(\d{1,2}:\d{2}:\d{2})[,.](\d+)/;
+  for(const b of blocks){
+    const lines = b.split('\n').map(l => l.trim()).filter(Boolean);
+    const ti = lines.findIndex(l => l.includes('-->'));
+    if(ti < 0) continue;
+    const m = TIM.exec(lines[ti]);
+    if(!m) continue;
+    cues.push({ s: tsec(m[1] + ',' + pad3(m[2])),
+                e: tsec(m[3] + ',' + pad3(m[4])),
+                x: lines.slice(ti + 1).join(' ').replace(/\s+/g,' ').trim() });
+  }
+  return cues.map((c,i) => ({ id:i, s:c.s, e:c.e, x:c.x }));
+}
+
+function collapsePartial(text){
+  const keep = [];
+  for(const w of text.split(/\s+/)){
+    const k = w.replace(/[.,]+$/,'').toLowerCase();
+    const p = keep.length ? keep[keep.length-1].replace(/[.,]+$/,'').toLowerCase() : '';
+    if(p && k !== p && (k.endsWith(p) || p.endsWith(k)) &&
+       Math.abs(k.length - p.length) <= 4 && Math.min(k.length, p.length) >= 5){
+      if(w.length > keep[keep.length-1].length) keep[keep.length-1] = w;
+      continue;
+    }
+    keep.push(w);
+  }
+  return keep.join(' ').replace(/\s+/g,' ').trim();
+}
+
+function cleanCues(cues){
+  for(const c of cues){
+    const toks = c.x.split(/\s+/).filter(Boolean).map(w => {
+      const m = w.match(/^[.,?!:;"']*([^.,?!:;"']+)([.,?!:;"']*)$/);
+      if(!m) return w;
+      const core = m[1], trail = m[2], low = core.toLowerCase();
+      if(REP.SIMPLE[low]){
+        let r = REP.SIMPLE[low];
+        if(/^[A-Z]/.test(core)) r = r[0].toUpperCase() + r.slice(1);
+        return r + trail;
+      }
+      if(core.length >= 4 && REP.GLUED[low]) return REP.GLUED[low] + trail;
+      return w;
+    });
+    let text = toks.join(' ');
+    for(const a of Object.keys(REP.PHRASES)){
+      const re = new RegExp('\\b' + a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'g');
+      text = text.replace(re, () => REP.PHRASES[a]);
+    }
+    text = text.split(/\s+/).map(w => {
+      const k = w.replace(/[.,]+$/,'').toLowerCase();
+      return REP.SIMPLE[k] || w;
+    }).join(' ');
+    let prev;
+    do { prev = text; text = text.replace(/\b([A-Z][a-z]{2,})\s+\1\b/g,'$1'); } while(text !== prev);
+    c.x = collapsePartial(text);
+  }
+  for(let i = 1; i < cues.length; i++)
+    if(cues[i].s < cues[i-1].e) cues[i].s = cues[i-1].e;
+  const out = [];
+  for(const c of cues){
+    const last = out[out.length-1];
+    if(last && (c.e - c.s) < 0.7){
+      last.e = c.e;
+      last.x = (last.x.replace(/\s+$/,'') + ' ' + c.x).trim();
+    } else out.push(Object.assign({}, c));
+  }
+  return out;
+}
+
+function packPages(cues){
+  const pages = []; let cur = [], chars = 0;
+  for(const c of cues){
+    /* never break below two cues, or a single long opening line gets a page
+       to itself and the spread looks empty */
+    if(cur.length >= 2 && (chars + c.x.length > 440 || c.e - cur[0].s > 26)){
+      pages.push({ s:cur[0].s, e:cur[cur.length-1].e, l:cur });
+      cur = []; chars = 0;
+    }
+    cur.push(c); chars += c.x.length + 1;
+  }
+  if(cur.length) pages.push({ s:cur[0].s, e:cur[cur.length-1].e, l:cur });
+  return pages;
+}
+
+const srtTime = s => {
+  s = Math.max(0, s || 0);
+  const ms = Math.round((s - Math.floor(s)) * 1000);
+  const p = (n,w) => String(n).padStart(w,'0');
+  return p(Math.floor(s/3600),2) + ':' + p(Math.floor(s%3600/60),2) + ':' +
+         p(Math.floor(s%60),2) + ',' + p(ms,3);
+};
+
+/* ---------------- state ---------------- */
+let CUES = [];
+const ts = s => { s = Math.max(0, s|0 || 0); const p=(n,w)=>String(n).padStart(w,'0');
+  return p((s/3600)|0,2)+':'+p(((s%3600)/60)|0,2)+':'+p(s%60,2); };
+
+const DEPS = {
+  pages: [],
+  uL: document.getElementById('uL'), uR: document.getElementById('uR'),
+  turn: document.getElementById('turn'),
+  turnF: document.getElementById('turnF'), turnB: document.getElementById('turnB'),
+  cast: document.getElementById('cast'),
+  dur: p => p ? Math.max(1, p.e - p.s) : 6,
+  render: p => p ? '<p>' + esc(p.l.map(c => c.x).join(' ')) + '</p>'
+                 : '<p class="blank">&mdash;</p>',
+  onFlip: () => rustle()
+};
+const B = createBook(DEPS);
+window.__book = B;
+window.__deps = DEPS;
+
+const spans = () => Math.ceil(DEPS.pages.length / 2);
+
+function rebuild(keepSpread){
+  DEPS.pages = packPages(CUES);
+  B.prepare(Math.min(keepSpread || 0, spans() - 1));
+  buildMarks();
+  updateNav();
+}
+
+function loadBaked(){
+  const parsed = parseSrt(BAKED_SRT);
+  if(!parsed.length) return;
+  CUES = cleanCues(parsed);
+  rebuild(0);
+}
+
+/* ---------------- playback ---------------- */
+/* Lead time: show a spread this many seconds BEFORE its narration begins, so
+   the words are already on screen when you reach them, and so the ~2.2s page
+   turn always finishes before its text starts being spoken. Raise it if you
+   want more read-ahead. */
+const LEAD = 2.4;
+window.__lead = LEAD;            /* exposed so the test can assert against it */
+
+/* a spread is TWO PACKED PAGES, not two cues - pages hold a variable number of
+   cues (budget-packed), so this must walk pages, not cues */
+function spreadAt(t){
+  const P = DEPS.pages;
+  const cut = t + LEAD;
+  let i = 0;
+  for(let k = 0; k < P.length; k++){ if(P[k].s <= cut) i = Math.floor(k/2); else break; }
+  return i;
+}
+/* Page nav moves the AUDIO, not just the picture: the clock drives the spread,
+   so seeking only the page would be undone by the next tick. */
+function pageStart(i){ const p = DEPS.pages[2*i]; return p ? p.s : 0; }
+function stepPage(delta){
+  const target = Math.max(0, Math.min(spans() - 1, B.shown + delta));
+  if(target === B.shown) return;
+  vid.currentTime = pageStart(target);
+  B.go(target, !vid.paused);
+  updateNav();
+}
+function updateNav(){
+  prevBtn.disabled = B.shown <= 0;
+  nextBtn.disabled = B.shown >= spans() - 1;
+  pgEl.textContent = (B.shown + 1) + ' / ' + spans();
+}
+prevBtn.addEventListener('click', () => stepPage(-1));
+nextBtn.addEventListener('click', () => stepPage(1));
+
+function tick(){
+  const t = vid.currentTime, d = vid.duration || 0;
+  if(d) seek.max = d;
+  if(!seek.matches(':active')){
+    seek.value = t;
+    seek.style.setProperty('--p', (d ? t/d*100 : 0) + '%');
+  }
+  tc.textContent = ts(t) + ' / ' + ts(d);
+  /* while paused a seek should land instantly, not launch an animation that
+     keeps turning with the audio stopped */
+  B.go(spreadAt(t), !vid.paused);
+  updateNav();
+}
+vid.addEventListener('timeupdate', tick);
+vid.addEventListener('loadedmetadata', () => { tick(); buildMarks(); });
+seek.addEventListener('input', () => { vid.currentTime = +seek.value; B.go(spreadAt(+seek.value), false); });
+
+playBtn.addEventListener('click', () => vid.paused ? vid.play() : vid.pause());
+vid.addEventListener('play',  () => playBtn.innerHTML = '&#10073;&#10073;');
+vid.addEventListener('pause', () => playBtn.innerHTML = '&#9654;');
+
+document.getElementById('go').addEventListener('click', () => {
+  document.getElementById('intro').classList.add('hide');
+  bookEl.classList.add('open');
+  setTimeout(() => {
+    document.getElementById('covR').style.display = 'none';
+    document.getElementById('covL').style.display = 'none';
+  }, 1650);
+  vid.play().catch(() => {});
+});
+/* no global keydown handler: a document-level handler swallows Space, so typing
+   a space inside an editable cue would toggle playback instead of inserting it.
+   The buttons remain keyboard-operable through normal focus + activation. */
+
+/* ---------------- misc ---------------- */
+function buildMarks(){
+  const d = vid.duration || 1;
+  document.getElementById('marks').innerHTML =
+    CUES.map(c => '<span class="mk" style="left:' + (c.s/d*100).toFixed(3) + '%"></span>').join('');
+}
+window.addEventListener('resize', buildMarks);
+
+let ac = null, soundOn = true;
+function rustle(){
+  if(!soundOn) return;
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if(ac.state === 'suspended') ac.resume();
+    const dur = .32, sr = ac.sampleRate;
+    const buf = ac.createBuffer(1, Math.floor(sr*dur), sr), d = buf.getChannelData(0);
+    for(let i = 0; i < d.length; i++){
+      const t = i/d.length; d[i] = (Math.random()*2-1) * Math.pow(1-t, 2.4);
+    }
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const bp = ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=.6;
+    const hp = ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1000;
+    const g  = ac.createGain(); g.gain.value = .13;
+    src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(ac.destination);
+    src.start();
+  }catch(e){}
+}
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn; soundBtn.classList.toggle('off', !soundOn);
+});
+
+const dust = document.getElementById('dust');
+for(let i = 0; i < 34; i++){
+  const m = document.createElement('div'); m.className = 'mote';
+  const sz = 1.4 + Math.random()*3.6;
+  m.style.cssText = 'width:'+sz+'px;height:'+sz+'px;left:'+(Math.random()*100)+'%;'+
+    'filter:blur('+(Math.random()*1.4).toFixed(1)+'px);'+
+    'animation-duration:'+(14+Math.random()*22)+'s;animation-delay:-'+(Math.random()*30)+'s;';
+  dust.appendChild(m);
+}
+
+loadBaked();
+tick();
+</script>
+</body>
+</html>
