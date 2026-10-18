@@ -322,19 +322,21 @@ function measure(){
   });
 }
 
-/* A section is centred when it is short enough, otherwise its top is brought
-   just below the upper rod so the whole of it is readable as it arrives. */
+/* A section must sit inside the CLEAR strip, not merely inside the parchment:
+   the frayed-edge shading bands are 56px each and text under them is unreadable. */
 function anchorFor(i){
   const g = GROUPS[i];
   if(!g) return 0;
+  const BAND = 56;
   const pad = parseFloat(getComputedStyle(paper).paddingTop) || 40;
   const view = parch.clientHeight;
-  if(g.h && g.h < view * 0.86){
-    /* centre it, but never above the top of the sheet */
-    const centre = g.top - (view - g.h) / 2;
-    return Math.max(0, centre - pad * 0.5);
+  const clear = Math.max(140, view - BAND * 2);
+  if(g.h && g.h < clear * 0.96){
+    /* centre it within the window */
+    return Math.max(0, g.top - (view - g.h) / 2);
   }
-  return Math.max(0, g.top - pad - view * 0.12);
+  /* too tall to centre: drop its head just below the upper band */
+  return Math.max(0, g.top - pad - BAND);
 }
 
 function sectionIndexAt(t){
