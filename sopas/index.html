@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>May Katulong Sa Aking Sopas &middot; Old Scroll</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#3b2a17; --ink-soft:#5a4426;
+    --parch-a:#e3d3a8; --parch-b:#cdb887; --parch-c:#b9a06a;
+    --wood-1:#7a4f27; --wood-2:#4a2c14; --wood-3:#2e1a0b;
+    --brass:#c9a227; --brass-d:#8a6d14;
+    --gold:#d4af37; --lead:2.4;
+  }
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(ellipse at 50% 30%,#3a2a18 0%,#1d1410 55%,#0b0807 100%);
+    color:#e8dcc0;font-family:"Palatino Linotype","Book Antiqua",Palatino,
+         "Bookman Old Style",Georgia,serif;
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  /* candle + stone-room ambience */
+  /* story audio: kept in the DOM (not display:none) so playback is reliable,
+     but parked off-screen */
+  #bg{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;
+      pointer-events:none}
+  #room{position:fixed;inset:0;z-index:0;pointer-events:none;
+        background:
+          radial-gradient(circle at 18% 12%,rgba(255,190,110,.10) 0,transparent 34%),
+          radial-gradient(circle at 84% 86%,rgba(255,170,90,.08) 0,transparent 30%),
+          radial-gradient(ellipse at 50% 44%,rgba(0,0,0,0) 20%,rgba(0,0,0,.72) 100%);
+        animation:flicker 6.5s ease-in-out infinite}
+  @keyframes flicker{
+    0%,100%{opacity:.9}30%{opacity:1}55%{opacity:.82}78%{opacity:.96}}
+  #motes{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .mote{position:absolute;border-radius:50%;background:rgba(255,224,160,.42);
+        box-shadow:0 0 8px rgba(255,206,120,.55);animation:drift linear infinite}
+  @keyframes drift{
+    0%{transform:translate3d(0,14vh,0) scale(.5);opacity:0}
+    15%{opacity:.75}85%{opacity:.4}
+    100%{transform:translate3d(20px,-104vh,0) scale(1.1);opacity:0}}
+
+  header{position:relative;z-index:5;text-align:center;padding:12px 14px 2px}
+  h1{font-size:clamp(15px,2.05vw,25px);letter-spacing:.1em;font-weight:400;
+     line-height:1.3;padding:0 10px;color:var(--brass);
+     text-shadow:0 0 20px rgba(201,162,39,.35)}
+  header p{font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;
+           color:#8a7859;margin-top:5px}
+
+  /* ---------- the scroll ---------- */
+  #stage{position:relative;z-index:5;flex:1;display:flex;align-items:center;
+         justify-content:center;padding:4px 14px;min-height:0}
+  #scroll{position:relative;width:min(880px,95vw);height:min(74vh,720px);
+          display:flex;flex-direction:column;align-items:stretch;
+          transform:scaleY(.02);transform-origin:top center;opacity:0;
+          transition:transform 1.25s cubic-bezier(.22,1,.3,1),opacity .8s ease}
+  #scroll.open{transform:scaleY(1);opacity:1}
+  .rod{position:relative;height:26px;flex:0 0 auto;z-index:4;
+       background:linear-gradient(180deg,var(--wood-1) 0%,var(--wood-2) 46%,
+                                  var(--wood-3) 100%);
+       border-radius:13px;
+       box-shadow:0 4px 14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,215,150,.22)}
+  .rod::before,.rod::after{content:"";position:absolute;top:50%;
+       width:20px;height:34px;transform:translateY(-50%);
+       background:linear-gradient(180deg,var(--brass) 0%,var(--brass-d) 100%);
+       border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.55)}
+  .rod::before{left:-8px} .rod::after{right:-8px}
+  .rod.top{margin-bottom:-9px}
+  .rod.bottom{margin-top:-9px}
+
+  #parchment{position:relative;flex:1;overflow:hidden;
+     background:
+       linear-gradient(180deg,rgba(120,90,45,.30),transparent 6%,transparent 94%,rgba(120,90,45,.30)),
+       radial-gradient(ellipse at 18% 24%,rgba(140,96,40,.16) 0,transparent 34%),
+       radial-gradient(ellipse at 82% 68%,rgba(140,96,40,.13) 0,transparent 30%),
+       radial-gradient(ellipse at 62% 12%,rgba(150,105,45,.10) 0,transparent 24%),
+       radial-gradient(ellipse at 28% 88%,rgba(150,105,45,.11) 0,transparent 26%),
+       linear-gradient(178deg,var(--parch-a) 0%,var(--parch-b) 55%,var(--parch-c) 100%);
+     box-shadow:inset 0 0 60px rgba(90,62,26,.45),0 16px 44px rgba(0,0,0,.66)}
+  /* frayed top/bottom shading, as if the sheet continues past the rods */
+  #parchment::before,#parchment::after{content:"";position:absolute;left:0;right:0;
+       height:56px;z-index:3;pointer-events:none}
+  #parchment::before{top:0;background:linear-gradient(180deg,rgba(70,46,18,.55),transparent)}
+  #parchment::after{bottom:0;background:linear-gradient(0deg,rgba(70,46,18,.55),transparent)}
+  #paper{position:absolute;left:0;right:0;top:0;padding:9% 9% 60% 9%;
+         will-change:transform;
+         transition:transform .95s cubic-bezier(.32,.86,.24,1)}
+  #paper.notrans{transition:none}
+  #paper p{margin:0 0 1.05em;color:var(--ink);text-align:justify;
+     font-size:clamp(15px,1.85vw,25px);line-height:1.88;
+     text-indent:1.3em;hyphens:auto;
+     text-shadow:0 1px 0 rgba(255,246,220,.28)}
+  #paper p:first-child{text-indent:0}
+  #paper p:first-child::first-letter{font-size:3.1em;float:left;line-height:.82;
+     padding:.04em .12em 0 0;color:#5c3a17;
+     text-shadow:1px 1px 0 rgba(255,240,205,.45)}
+  /* wax seal removed: it sat over the text at this size */
+
+  /* ---------- controls ---------- */
+  #tools{position:relative;z-index:6;display:flex;gap:7px;align-items:center;
+     justify-content:center;flex-wrap:wrap;padding:4px 14px 2px}
+  .tb{padding:8px 17px;border-radius:99px;cursor:pointer;font-family:inherit;
+     font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#c3ad86;
+     background:rgba(255,235,200,.06);border:1px solid rgba(201,162,39,.3);
+     transition:color .16s,border-color .16s,background .16s}
+  .tb:hover{color:var(--brass);border-color:rgba(201,162,39,.65);background:rgba(201,162,39,.1)}
+  .tb:disabled{opacity:.28;cursor:default;color:#7d6f8d}
+  .tb:disabled:hover{color:#7d6f8d;border-color:rgba(201,162,39,.3);background:rgba(255,235,200,.06)}
+  .tb.muted{opacity:.4}
+  .tb[hidden]{display:none}
+  #bar{position:relative;z-index:6;padding:6px 18px 14px;display:flex;align-items:center;
+     gap:13px;max-width:880px;width:100%;margin:0 auto}
+  .btn{flex:0 0 auto;width:46px;height:46px;border-radius:50%;cursor:pointer;
+     border:1px solid rgba(201,162,39,.45);
+     background:radial-gradient(circle at 35% 30%,#6a4522,#2e1a0b);
+     color:var(--brass);font-size:17px;display:grid;place-items:center;
+     box-shadow:0 0 16px rgba(201,162,39,.2);transition:transform .16s,box-shadow .16s}
+  .btn:hover{transform:scale(1.07);box-shadow:0 0 26px rgba(201,162,39,.4)}
+  .track{flex:1;position:relative;display:flex;align-items:center;height:26px}
+  #seek{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;
+     background:linear-gradient(90deg,var(--brass) var(--p,0%),rgba(255,255,255,.1) var(--p,0%));
+     outline:none;cursor:pointer}
+  #seek::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
+     border-radius:50%;background:radial-gradient(circle at 35% 30%,#f6e3b0,var(--brass));
+     box-shadow:0 0 12px rgba(201,162,39,.75);cursor:grab}
+  #seek::-moz-range-thumb{width:17px;height:17px;border:0;border-radius:50%;
+     background:radial-gradient(circle at 35% 30%,#f6e3b0,var(--brass))}
+  #marks{position:absolute;left:0;right:0;top:50%;height:6px;
+     transform:translateY(-50%);pointer-events:none}
+  .mk{position:absolute;top:50%;width:2px;height:10px;transform:translate(-50%,-50%);
+     background:rgba(255,232,168,.35);border-radius:2px}
+  #time{flex:0 0 auto;font-size:12px;letter-spacing:.08em;color:#a8957a;
+     font-variant-numeric:tabular-nums;min-width:104px;text-align:right}
+  #pos{color:var(--brass)}
+
+  #intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;
+     background:radial-gradient(ellipse at 50% 45%,rgba(48,32,18,.93),rgba(6,4,3,.98))}
+  #intro.hide{display:none}
+  #intro h2{font-size:clamp(17px,2.9vw,32px);color:var(--brass);letter-spacing:.1em;
+     font-weight:400;text-align:center;text-shadow:0 0 28px rgba(201,162,39,.4);
+     padding:0 22px;line-height:1.35}
+  #intro p{color:#8a7859;font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+     margin-top:14px;text-align:center;padding:0 20px}
+  #go{margin-top:30px;padding:14px 38px;border-radius:99px;cursor:pointer;
+     font-family:inherit;font-size:14px;letter-spacing:.24em;text-transform:uppercase;
+     color:#2a1a0a;background:linear-gradient(180deg,#e8ce84,var(--brass));
+     border:none;box-shadow:0 0 30px rgba(201,162,39,.42);transition:transform .16s}
+  #go:hover{transform:scale(1.05)}
+  @media(max-width:640px){
+    #scroll{height:min(70vh,600px);width:96vw}
+    #paper{padding:7% 6% 60% 6%}
+    #time{min-width:86px;font-size:11px}}
+  @media(prefers-reduced-motion:reduce){
+    #room,.mote,#paper p{animation:none!important}
+    #scroll{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<video id="bg" playsinline preload="auto" src="Sampaguita%20Street%2058.m4a"></video>
+<div id="room"></div>
+<div id="motes"></div>
+
+<header>
+  <h1>May Katulong Sa Aking Sopas</h1>
+  <p>Isang lumang balumbon</p>
+</header>
+
+<div id="stage">
+  <div id="scroll">
+    <div class="rod top"></div>
+    <div id="parchment">
+      <div id="paper"></div>
+    </div>
+    <div class="rod bottom"></div>
+  </div>
+</div>
+
+<div id="tools">
+  <button class="tb" id="prevBtn">&#9664;&nbsp; Itaas</button>
+  <button class="tb" id="nextBtn">Ibaba &nbsp;&#9654;</button>
+  <button class="tb" id="musicBtn" hidden>&#9834;&nbsp; Musika</button>
+</div>
+
+<div id="bar">
+  <button id="play" class="btn" aria-label="Play">&#9654;</button>
+  <div class="track">
+    <input id="seek" type="range" min="0" max="100" value="0" step="0.05">
+    <div id="marks"></div>
+  </div>
+  <div id="time"><span id="pos">&mdash;</span> &nbsp; <span id="tc">00:00 / 00:00</span></div>
+</div>
+
+<div id="intro"><div>
+  <h2>May Katulong Sa Aking Sopas</h2>
+  <p>Isang lumang balumbon</p>
+  <button id="go">Buksan</button>
+</div></div>
+
+<script>
+const REP = {"GLUED": {"atbakitkailangan": "At bakit kailangan", "bakitkailangan": "Bakit kailangan", "cellphonemaiklingkwentong": "Cellphone. Maikling kwento ng", "disintegratedisintegrate": "Disintegrate", "halosmapasigaw": "Halos na pasigaw", "hindinaiintindihanng": "Hindi na intindihan ng", "jaypinagmasdan": "Jay pinagmasdan", "kangnakalanghap": "Kang nakalanghap", "nasaikalawangpalapag": "nasa ikalawang palapag", "nagpatuloysiya": "Nagpatuloy siya", "nagsimulanagsimulasiyangsiyang": "Nagsimula siyang", "nalimutannalimutan": "Nalimutan", "nalulungkotnalulungkotlang": "Nalulungkot lang", "natuwanatuwasi": "Natuwa si", "ngboseskanyang": "ng boses kanyang", "nginstatravelcute": "ng Instatravel cute", "ngkanilangbuilding": "ng kanilang building", "ngkanyangkanyang": "ng kanyang kanyang", "ngmukhakanyang": "ng mukha kanyang", "ngtelecommunication": "ng telecommunication", "pakiramdampakiramdamniya": "Pakiramdam niya", "roxasboulevard": "Roxas Boulevard", "sinubukanniyang": "Sinubukan niyang", "angkanilangkomunikasyon": "ang kanilang komunikasyon", "angmausopagtetext": "ang mauso pag-text", "angnagmamadalinghakbangpapuntang": "ang nagmamadaling hakbang papuntang", "angniyakanyangkwarto": "ang niya kanyang kwarto", "atbellboydolmen": "at bellboy Dolmen", "athinayaansiyang": "at hinaya an siyang", "atnapansinniyang": "at napansin niyang", "atpinagdikitpinagdikitdikit": "at pinagdikit dikit", "atsinalubongsiya": "at sinalubong siya", "ayparangnauunawaan": "ay parang nauunawaan", "baclaranbaclaran": "Baclaran", "baniyangnalulungkot": "baniya ng nalulungkot", "buongsimbahansimbahanbilangbilang": "buong simbahan bilang-bilang", "cellphonecellphoneniyang": "Cellphone. Cellphone niyang", "communitybuilding": "community building", "contactitinuro": "contact, ito nuro", "datingkinatatayuanng": "dating kinatatayuan ng", "ditoditonagtatapos": "dito, dito nagtatapos", "gitnanggitnangpatungan": "gitnang-gitnang patungan", "hangganghanggangbataan": "hanggang hanggang bataan", "hangganghangganginidoro": "hanggang hanggang inidoro", "hinawakanhinawakan": "hinawakan", "ibonglumilipad": "ibong lumilipad", "instatravelcute": "instatravel cute", "iyongiyongbagay": "iyong-iyong bagay", "kanilangbuilding": "kanilang building", "kaniyangkaniyanganak": "kaniyang kaniyang anak", "kanyangangdumi": "kanyang ang dumi", "kanyangkanyang": "kanyang kanyang", "kanyangkanyangkwarto": "kanyang-kanyang kwarto", "kaya'yomagigingginintuan": "kaya'y o magiging ginintuan", "kaya'ymalalagasdepende": "kaya'y malalagas depende", "kwentongcellphone": "kwento ng cellphone", "lumabaslumabas": "lumabas", "lumambottumigasdumulas": "lumabot, tumigas, dumulas", "lungkothindimatanggal": "lungkot. Hindi matanggal", "madalisiyangmakalimot": "madalisiyang makalimot", "magmukhangluma": "magmukhang luma", "malakingimageprovider": "malaking image provider", "mapagaanmapagaan": "mapagaan-mapagaan", "mganaroroonimahe": "mga naroroon, imahе", "milyungmilyong": "milyung milyong", "mukhangtuwingkailanganniyang": "mukha. Ng tuwing kailangan niyang", "naalaalangbumabalik": "naalaalang bumabalik", "nagsisilbingmonitor": "nagsisilbing monitor", "nahihirapanakong": "nahihirapan akong", "naidinisenyopara": "naidinesenyo para", "nakakonektasiya": "nakakonekta, siya", "nakasulatnakasulat": "nakasulat", "nalamangmapapanood": "nalaman mapapanood", "namanmagsusulatkung": "naman, magsusulat kung", "nanakatayomalapit": "nanakatayo, malapit", "nangyarinangyaridoon": "nangyari. Doon", "natandaannatandaan": "natandaan", "natatandaanniya": "natatandaan niya", "nilapitnilapit": "nilapit", "niya'ykailangan": "niya'y kailangan", "niyamatandaanhuminto": "niya matandaan, huminto", "niyanaramdaman": "niya naramdaman", "niyaniyamaintindihankung": "niya niya maintindihan kung", "noongnagkaroon": "noong nagkaroon", "paglilipatpaglilipat": "paglilipat", "pakiramdampakiramdam": "pakiramdam", "panahonpanahon": "panahon", "panahonpanahondrawer": "panahon, drawer", "peroperonakapaloob": "pero onaka", "pintuanpintuannakatingin": "pintuan nakatingin", "receiverbutton": "receiver button", "ringinustonaman": "rin. Ginusto na man", "sakanyangcabinet": "sakanyang cabinet", "sanagsasalitang": "sa nagsasalitang", "sapagbungatpagbagsak": "sa pagbunat, pagbagsak", "sapaglalakadkatulad": "sa paglalakad katulad", "siya'tlangnaroroon": "siya't lang. Naroroon", "siyangmaglakad": "siyang maglakad", "siyangmaintindihansa": "siyang maintindihan sa", "siyangsiyanggumagalaw": "siyang gumagalaw", "tigilantigilan": "tigil-antigilan", "totoongtotoong": "totoong totoong", "transmitterreceiver": "transmitter receiver", "tumalontumalonlumitaw": "tumaon, tumalon lumitaw", "tumangotumango": "tumaon, tumango", "usongtechnological": "usong technological", "paanomag": "paano mag", "paanomagtext": "paano mag-text", "siyangayon": "siya'y ayon", "siya'yhindi": "Siya'y hindi", "siyanaturuan": "siya natuturan", "nungnung": "nung", "angmga": "ang mga", "angang": "ang ang", "parapara": "para, para", "arawrawna": "araw-araw na", "langnoong": "lang, noong", "atngayo'y": "at ngayo'y", "niyaniya": "niya, niya", "kungalam": "kung alam", "bagongklaseng": "bagong klaseng", "binigyansiyang": "Binigyan siyang", "nagiisang": "nag-iisang", "jaysijay": "Jay si Jay", "paradawmasmadaling": "para daw, mas madaling", "sasa": "sa sa", "sakaniyakungkaniya": "sa kaniya, kung sa kaniya", "kayangelamang": "kaya nang lamang", "ngmakalimotng": "ng makalimot ng", "bagaymgabagay": "bagay-magabagay", "ayparang": "ay parang", "ngpagkain": "ng pagkain", "kanyangbad emonitoraynasa": "kanyang, 'yung monitor ay nasa", "ibigsabihin": "Ibig sabihin", "aysabihin": "ay sabihin", "pumulaang": "pumula, ang", "ayangbungon": "yang", "gamitinangmga": "gamitin ang mga", "aparatomakina": "aparato, makina", "matindihang": "maintindihan", "nag-iisang": "nag-iisang", "usongteknolohikal": "usong teknolohikal", "nyang": "nyang", "gamon": "gamon", "gampagkatol": "gampagkatol", "malapitang": "malapit ang", "noonong": "noon, 'yong", "nungmapag": "nung mapag", "ngkatulad": "ng katulad", "gumagalawang": "gumagalaw ang", "itong": "itong", "inyong": "inyong", "niyang": "niyang", "mapapag": "mapapag", "tungkol": "tungkol"}, "SIMPLE": {"cel": "cell", "humintu": "huminto", "kuwentong": "kwentong", "instatravelcute": "insta travel cute", "bentean": "bente, an", "kaunlaran": "kaunlaran", "tapaglilipat": "tapaglipat", "bongun": "bungon"}, "PHRASES": {"main, tindihan": "maintain", "Na lulungkot": "Nalulungkot", "na lulungkot": "nalulungkot", "Kayang alamang": "Kaya'y alamang", "kayang alamang": "kaya'y alamang", "kinapaang": "kinapa ang", "Nihindi": "Hindi", "nihindi": "hindi", "maiklink": "maikling", "celpong": "cellphone", "Hindi na maatanda": "Hindi na matanda", "hindi na maatanda": "hindi na matanda", "nasa pulan na": "nasa pula na", "Matagal, matagal na": "Matagal na", "siya hindi siya": "siya'y", "siya, siya": "siya'y", "nag-iisang": "nag-iisang", "Mapasigaw": "mapasigaw", "tutuosin": "tutuosin"}};
+const BAKED_SRT = "1\n00:00:00,780 --> 00:00:05,780\nMay Katulong sa Aking Sopas, ni Reuel Molina Aguila.\n\n2\n00:00:05,780 --> 00:00:09,780\nMahirap talagang mawalan ng katulong.\n\n3\n00:00:09,780 --> 00:00:14,780\nIsang buwan kaming nawalan ng katulong at sa tingin ko'y katapusan na ng mundo.\n\n4\n00:00:14,780 --> 00:00:18,780\nSino ang mag-iigib sa kabilang kanto pag walang tubig?\n\n5\n00:00:18,780 --> 00:00:22,780\nSino ang magpapaypay sa bunso kung walang kuryente sa gabi?\n\n6\n00:00:22,780 --> 00:00:26,780\nSino ang maiiwan sa bahay pag kami'y nagtatrabaho?\n\n7\n00:00:26,780 --> 00:00:28,780\nSino ang maglalaba?\n\n8\n00:00:28,780 --> 00:00:35,780\nmaglilinis ng kubeta, mamamalengke, magluluto, at gagawa ng kung ano-ano pa,\n\n9\n00:00:35,780 --> 00:00:38,780\nna noon mo lang na laman na mahirap din palang gawin.\n\n10\n00:00:39,780 --> 00:00:42,780\nSapagkat pinalaki akong laging may nauutusan,\n\n11\n00:00:42,780 --> 00:00:49,780\nhangga't sa magpamilya'y, taglay pa rin ang kaisipang hindi kompleto ang tahanan kapag walang katulong.\n\n12\n00:00:49,780 --> 00:00:59,080\nNariyan ang ama, ang ina, ang mga anak, ang sariling bahay, ang kotse, ang mga appliances at ang katulong.\n\n13\n00:00:59,080 --> 00:01:04,080\nAng katotohanan nito'y nangungupahan lang kami sa isang lumang apartment.\n\n14\n00:01:04,080 --> 00:01:13,580\nNagba-bus sa pagpasok sa opisina at maliban sa minanang GE at niregalo sa kasal na double burner, karaniwang pamilya lang kami.\n\n15\n00:01:13,580 --> 00:01:17,580\nngunit mawala na ang lahat, wag lang ang katulong.\n\n16\n00:01:17,580 --> 00:01:19,580\nEh ano kung may brown out,\n\n17\n00:01:19,580 --> 00:01:23,580\nmakapagsisindi ka ng kandila at makapagluluto sa uling.\n\n18\n00:01:23,580 --> 00:01:25,580\nEh ano kung mawalan ng tubig,\n\n19\n00:01:25,580 --> 00:01:27,580\nmayroon kang maiigiban.\n\n20\n00:01:27,580 --> 00:01:30,580\nEh ano kung wala may mapamamalengke,\n\n21\n00:01:30,580 --> 00:01:32,580\nmayroon kang mauutangan.\n\n22\n00:01:32,580 --> 00:01:34,580\nngunit kapag wala kang katulong,\n\n23\n00:01:34,580 --> 00:01:37,580\npara kang nasunugan ng makailang ulit.\n\n24\n00:01:37,580 --> 00:01:39,580\nSa pagkat kung wala kang katulong,\n\n25\n00:01:39,580 --> 00:01:42,580\nsino ang iyong mauutusang magluto,\n\n26\n00:01:42,580 --> 00:01:49,580\numigib at umutang? Walang dakilang lipunan ang naitayo nang walang nauutusan.\n\n27\n00:01:49,580 --> 00:01:53,580\nNakilala nga lamang nga sila sa iba't ibang pangalan.\n\n28\n00:01:53,580 --> 00:01:58,580\nNgunit sila rin ang nagtayo ng piramide, nagmantina ng mga palasyo\n\n29\n00:01:58,580 --> 00:02:02,580\nat nag-aruga sa mga anak ng Hari't Emperador.\n\n30\n00:02:02,580 --> 00:02:07,580\nKaya't ako pa kayang isang karaniwang burgis na nagnanais na makaahon sa buhay\n\n31\n00:02:07,580 --> 00:02:11,580\nang hindi maghahangad na magkaroon din ng isang katulong,\n\n32\n00:02:11,580 --> 00:02:14,580\nang hindi maghahangad na umulad din?\n\n33\n00:02:14,580 --> 00:02:18,580\nSa tulong ng isang mauutusan. Ang katulong,\n\n34\n00:02:18,580 --> 00:02:22,580\npara sa mga katulad kong katumbas ng sampung appliances\n\n35\n00:02:22,580 --> 00:02:26,580\nna hindi ko mabili, telepono at mensahero,\n\n36\n00:02:26,580 --> 00:02:29,580\nsecurity guard at sekretarya.\n\n37\n00:02:29,580 --> 00:02:31,580\nSiya ang nagbigay sa aking ng panahon\n\n38\n00:02:31,580 --> 00:02:35,580\nupang maging libre ako at pakinabangan ng lipunan.\n\n39\n00:02:35,580 --> 00:02:39,580\nSila, sa kabuan, kung gayon,\n\n40\n00:02:39,580 --> 00:02:43,980\nang lihim na mayoryang nagsisilbing gulugod ng lipunan.\n\n41\n00:02:43,980 --> 00:02:46,780\nIsipin na lang kung walang katulong.\n\n42\n00:02:46,780 --> 00:02:52,780\nAng mga kagalang-galang na naatasan o nahalal na mag-isip para sa ating kinabukasan\n\n43\n00:02:52,780 --> 00:02:56,980\nay matatali sa walang kakwenta-kwentang gawaing pambahay.\n\n44\n00:02:56,980 --> 00:02:59,180\nKay sagwang pangitain,\n\n45\n00:02:59,180 --> 00:03:01,980\nnaglalaba ang pangulo ng Pilipinas,\n\n46\n00:03:01,980 --> 00:03:05,580\nhabang inip ng naghihintay ang mga bisitang dayuhan.\n\n47\n00:03:05,580 --> 00:03:08,820\nNaglilinis ng Kubeta ang pangalawang pangulo,\n\n48\n00:03:08,820 --> 00:03:14,740\nhabang patuloy na gumagawa ng karumal-dumal na krimen ang iba't ibang sindikato.\n\n49\n00:03:15,380 --> 00:03:20,540\nNang nawalan kami ng katulong, isa kaming pamilyang laging nakakunot ang ulo.\n\n50\n00:03:21,100 --> 00:03:27,340\nWala na ang luksurya ng paggising sa pinakahuling segundo bago magmadali sa opisina.\n\n51\n00:03:28,020 --> 00:03:32,460\nAng huling oras ng iyong pagtulog ay ilalaan mo na sa unang oras\n\n52\n00:03:32,460 --> 00:03:35,740\nng iyong paggising upang magluto na agahan,\n\n53\n00:03:35,740 --> 00:03:39,100\nmaghugas ng kinatamaran sa gabing pinagkainan,\n\n54\n00:03:39,100 --> 00:03:44,300\nmagwalis-walis sa bakuran, at kaunting punas-punas sa loob ng bahay.\n\n55\n00:03:44,300 --> 00:03:48,740\nSamantala, nakaabang ang gagawing baon ng mga bata,\n\n56\n00:03:48,740 --> 00:03:51,100\nang uniporimeng isusuot nila,\n\n57\n00:03:51,100 --> 00:03:55,060\nat ang school bus na waring lagi mong naririnig na parating na.\n\n58\n00:03:55,060 --> 00:03:57,740\nNaitakda na ninyong mag-asawa,\n\n59\n00:03:57,740 --> 00:04:00,260\nkung sino ang aabsent sa araw na iyon,\n\n60\n00:04:00,260 --> 00:04:04,760\nupang siya naman ang humarap sa buntong ng labahin at plantsahin\n\n61\n00:04:04,760 --> 00:04:06,760\nat pag-aalaga sa bunso.\n\n62\n00:04:06,760 --> 00:04:11,260\nWala na rin ang masasayang oras ng pag-a-unwind sa malamlam na kislap\n\n63\n00:04:11,260 --> 00:04:15,260\nng malamig na bote ng beer sa mararanasang beerhouse\n\n64\n00:04:15,260 --> 00:04:17,760\nhabang pinapalampas ang rush hour.\n\n65\n00:04:17,760 --> 00:04:21,760\nNagmamadali ka na rin dahil dadahan ka pa sa palengke.\n\n66\n00:04:21,760 --> 00:04:23,460\nNgunit higit sa lahat,\n\n67\n00:04:23,460 --> 00:04:27,560\nnagmamadali ka na rin dahil ang ilang minutong pagkabalam mo\n\n68\n00:04:27,560 --> 00:04:30,840\nay nangangahulugang simangot sa naiwang asawa\n\n69\n00:04:30,840 --> 00:04:34,980\nna ngayon ay kaharap na ang pagluluto at assignment ng mga bata.\n\n70\n00:04:35,760 --> 00:04:38,100\nKunot noo ang kakatok sa pag-uwi\n\n71\n00:04:38,100 --> 00:04:41,820\nna nag-aalalang ikaw naman ang susunod na maiwan sa bahay.\n\n72\n00:04:42,160 --> 00:04:45,780\nKayat ayon, matapos ang isang buwang pagdurusa,\n\n73\n00:04:45,780 --> 00:04:49,780\nnag-file kami ng isang linggong leave at sumugod sa probinsya.\n\n74\n00:04:50,260 --> 00:04:52,260\nBitbit ang buong pamilya.\n\n75\n00:04:52,600 --> 00:04:56,400\nIpinagbilin sa kapitbahay ang kinandaduhang bahay.\n\n76\n00:04:56,400 --> 00:05:02,400\nAt pinakipagsapalaran ang wala sa kondisyong segunda manong kotse ng iyong bayaw.\n\n77\n00:05:02,400 --> 00:05:05,810\nBahala na.\n\n78\n00:05:05,810 --> 00:05:07,810\nAh, probinsya.\n\n79\n00:05:07,810 --> 00:05:14,810\nSariwang simoy ng hangin, prutas, gulay at matamis na ngiti ng masasayang magsasaka.\n\n80\n00:05:14,810 --> 00:05:19,810\nNais ko munang matulog sa ilalim ng puno ng kawayan.\n\n81\n00:05:19,810 --> 00:05:23,810\nAt matapos ang tanghaling inihaw na dalag, dinengdeng\n\n82\n00:05:23,810 --> 00:05:28,810\nat manggang hinog  na paumanhing inihanda ng tiyahin ng aking misis.\n\n83\n00:05:28,810 --> 00:05:31,810\nSulit ang walong oras na biyahe;\n\n84\n00:05:31,810 --> 00:05:37,810\nNg dalawang overheating, isang flat tire, at kung ilang pamemerwisyo ng pag-jingle.\n\n85\n00:05:37,810 --> 00:05:43,810\nLubos din ang paumanhin ng dati naming katulong sa anyo ng kanilang bahay.\n\n86\n00:05:43,810 --> 00:05:46,810\nAni niya'y parang tangkal ng manok.\n\n87\n00:05:46,810 --> 00:05:50,810\nKandarapang pinunas-punasan ang bankong uupuan ko sana\n\n88\n00:05:50,810 --> 00:05:54,810\nhabang pabulyaw na inuutusan ang batang kapatid.\n\n89\n00:05:54,810 --> 00:05:57,810\nMamitas daw ng manggang hilaw.\n\n90\n00:05:57,810 --> 00:06:00,810\nPaborito ko raw ito, tanda pa niya.\n\n91\n00:06:00,810 --> 00:06:04,810\nSiya ang una naming nilapitan dahil nagbabakasakali kaming\n\n92\n00:06:04,810 --> 00:06:06,810\nmahatak namin siyang muli.\n\n93\n00:06:06,810 --> 00:06:10,810\nAng sabi kasi pinauwi na siya ng kanyang mga magulang.\n\n94\n00:06:10,810 --> 00:06:14,810\nHigit daw nilang kailangan ang tulong ng aming katulong.\n\n95\n00:06:14,810 --> 00:06:19,510\nNgunit ang karga nyang pasusuhin ang nagsabing humanap na lang kami ng iba.\n\n96\n00:06:20,310 --> 00:06:26,190\nAng bilis naman manganak, ang pabirong tanong ko habang nilalantakan ko ang manggang hilaw\n\n97\n00:06:26,190 --> 00:06:28,810\nna ngayo'y naglalangoy sa bagoong Iloko.\n\n98\n00:06:29,310 --> 00:06:33,110\nDalawang linggo pa lang ang nawawala, may pasususuhin na.\n\n99\n00:06:33,810 --> 00:06:36,810\nSa asawa raw iyon ang kanyang kapatid na lalaki.\n\n100\n00:06:37,310 --> 00:06:39,810\nEh bakit hindi yung asawa ang mag-alaga?\n\n101\n00:06:40,510 --> 00:06:43,810\nNagpunta raw sa bayan, nagtinda ng mangga.\n\n102\n00:06:44,810 --> 00:06:50,610\nBumukig sa aking lalamunan ang isang tapyas ng mangga na hindi ko nanguyang mabuti.\n\n103\n00:06:51,410 --> 00:06:55,410\nAng kapatid naman daw niya ay nag-raro kasama ng kanyang ama.\n\n104\n00:06:56,010 --> 00:07:00,210\nAng nanay niya ay nakipagpalit ng inaning mais para sa abono.\n\n105\n00:07:00,510 --> 00:07:04,410\nAt ang anim na maliliit na batang kanina pa pasilip-silip\n\n106\n00:07:04,510 --> 00:07:08,710\nsaka magbubungisngisan ay mga kapatid at pamangkin niya.\n\n107\n00:07:09,210 --> 00:07:14,010\nNagpapangabot-abot na dahil sa maagang pag-aasawa ng kanyang kapatid.\n\n108\n00:07:14,810 --> 00:07:18,810\nSuot ng dati namin katulong ang lumang damit ng misis ko.\n\n109\n00:07:18,810 --> 00:07:21,810\nBonus namin yun, wika nga.\n\n110\n00:07:21,810 --> 00:07:22,810\nPano ba naman?\n\n111\n00:07:22,810 --> 00:07:26,810\nHalos wala nang natira sa ipon niyang sweldo.\n\n112\n00:07:26,810 --> 00:07:28,810\nBuwan-buwang nagpapadala.\n\n113\n00:07:28,810 --> 00:07:30,810\nKesyo nagkasakit ang isa sa kanila.\n\n114\n00:07:30,810 --> 00:07:32,810\nWalang maisaing,\n\n115\n00:07:32,810 --> 00:07:33,810\nmay nanganak,\n\n116\n00:07:33,810 --> 00:07:34,810\nwalang maisaing,\n\n117\n00:07:34,810 --> 00:07:36,810\nwala nangg maibayad sa utang,\n\n118\n00:07:36,810 --> 00:07:38,810\nwalang maisaing.\n\n119\n00:07:38,810 --> 00:07:42,810\nSaka yun pang pinasalubong niyang biscuit na assorted.\n\n120\n00:07:42,810 --> 00:07:48,150\nT-shirt ng mga batang kapatid niya, plastic na lalagyan ng ulam para sa kanyang ama\n\n121\n00:07:48,150 --> 00:07:52,850\nat isang makulay na bestidang palda na isusuot daw niya sa piyesta.\n\n122\n00:07:52,850 --> 00:07:59,630\nKelangan daw niyang magsuot ng magagandang damit dahil iyon ang inaasahan ng mga kababaryo niya.\n\n123\n00:07:59,630 --> 00:08:08,210\nGaling Maynila. eh. At nangiti siyang may halong landi nang maisayaw man lang daw ng tagasentro.\n\n124\n00:08:08,210 --> 00:08:13,710\nNag-asawa nang lahat ang mga dati naming katulong, walang ilang buwang matapos makauwi.\n\n125\n00:08:15,010 --> 00:08:23,410\nEwan daw ng katulong namin, na para bang bigla silang gumaganda sa tingin ng kalalakihan kapag kauuwi nila mula sa Maynila.\n\n126\n00:08:24,410 --> 00:08:34,010\nKahit daw pagdating niya at nag-aararo agad kinabukasan, napansin daw niya ang pag-aligid ng mga kalabaw at ng mga kabuntot nitong binatilyong pastol.\n\n127\n00:08:34,010 --> 00:08:37,010\nKababaeng tao nag-aararo.\n\n128\n00:08:37,010 --> 00:08:44,010\nNangiti ako't agad pumarada sa aking isipan ang mga porma na mga feminista sa Maynila.\n\n129\n00:08:44,010 --> 00:08:46,010\nKay gandang pangitain.\n\n130\n00:08:46,010 --> 00:08:54,010\nSa labas ng bakuran, isang pulutong na mga bata ang nagkumpulan sa kotseng pilit kong ipinasok sa kanilang baryo.\n\n131\n00:08:54,010 --> 00:08:57,010\nNagpapakain ng baboy ang kanyang lola.\n\n132\n00:08:57,010 --> 00:09:01,010\nIsang pilantod na binata ang naagsisibak ng kahoy,\n\n133\n00:09:01,010 --> 00:09:05,010\nisang dalagita ang sumungaw sa bintana.\n\n134\n00:09:05,010 --> 00:09:09,010\nAyun, baka iyan ay gustong sumama sa Maynila.\n\n135\n00:09:09,010 --> 00:09:14,010\nLusob agad kami sa bahay ng dalagitang may 14-anyos yata.\n\n136\n00:09:14,010 --> 00:09:19,010\nGustong sumama, pero hindi marunong magluto.\n\n137\n00:09:19,010 --> 00:09:24,010\nDi bale, basta gustong sumama, matuturuan din yan.\n\n138\n00:09:24,010 --> 00:09:28,010\nGustong sumama, pero hindi maglalaba.\n\n139\n00:09:28,010 --> 00:09:33,010\nDi bale, basta gustong sumama, magkakaintindihan kami nyan.\n\n140\n00:09:33,010 --> 00:09:36,010\nGustong sumama, pero...\n\n141\n00:09:36,010 --> 00:09:41,010\nMaraming hindi alam, di bale, basta gustong sumama.\n\n142\n00:09:41,010 --> 00:09:44,010\nKami na ng asawa ko ang nagtatalo,\n\n143\n00:09:44,010 --> 00:09:48,010\nnamimili pa, kita nang walang pagpipilian.\n\n144\n00:09:48,010 --> 00:09:54,230\nUnfair naman daw kung parehong sweldo ang matatanggap gaya sa dati naming katulong\n\n145\n00:09:54,230 --> 00:09:58,350\ndahil wala pang alam at baka magtampo ang dati namin katulong.\n\n146\n00:09:58,350 --> 00:10:04,230\nDetalye na lang yan, ang mahalaga makakukuha ng katulong. Tapos.\n\n147\n00:10:04,230 --> 00:10:07,010\nHintayin na raw namin ang mga magulang.\n\n148\n00:10:07,010 --> 00:10:14,350\nHinintay nga namin at bago kumagat ang dilim, nag-aaway ang mga magulang ng dalagita.\n\n149\n00:10:14,350 --> 00:10:17,270\nGusto nung isa, ayaw nung isa.\n\n150\n00:10:17,270 --> 00:10:22,770\nBaka raw matulad sa kanyang ateng, hanggang ngayo'y hindi pa nila nababalitaan.\n\n151\n00:10:22,770 --> 00:10:28,270\nPinangakuan ng kung sinong nakapustura na magtatrabaho sa isang restaurant,\n\n152\n00:10:28,270 --> 00:10:32,770\nat hanggang ngayo'y, ni isang sulat ay hindi pa nagpapadala.\n\n153\n00:10:32,770 --> 00:10:38,270\nPilit akong nagpapaliwanag na hindi ako tulad ng amo ng kanyang ate,\n\n154\n00:10:38,270 --> 00:10:42,270\nna kung gusto nila, hahanapin ko pa ang nawawalang anak nila.\n\n155\n00:10:42,270 --> 00:10:48,070\nNa kung gusto nila, lahat ng kondisyon ng umaayaw na magulang ay ibinigay ko.\n\n156\n00:10:48,070 --> 00:10:55,470\nKinakabig na ako ng aking asawa, hindi pa rin sila umoo. Lumabas na nag-iiyak ang dalagita.\n\n157\n00:10:55,470 --> 00:10:59,870\nTalagang ganun daw, sabi ng aming dating katulong.\n\n158\n00:10:59,870 --> 00:11:03,270\nMahihirapan daw kami sa paghanap ng katulong.\n\n159\n00:11:03,270 --> 00:11:10,270\nPaano'y katatapos lamang ng matinding ani at sinisimulan nang araruhin ang bukid.\n\n160\n00:11:10,270 --> 00:11:17,750\nIbig sabihin, mapera pa ang mga tagabukid at kakailanganin ang lahat ng bisig sa paghanda ng bukid.\n\n161\n00:11:17,750 --> 00:11:20,350\nTaasan ko man daw ang sweldo.\n\n162\n00:11:20,350 --> 00:11:26,390\nGinalugad namin ang bawat tumpok ng bahay sa baryo, umaga hanggang gabi.\n\n163\n00:11:26,390 --> 00:11:32,110\nTalaga namang masarap ang simoy ng hangin at amoy ng kalulutong sariwang gulay,\n\n164\n00:11:32,110 --> 00:11:36,190\nngunit ganun nangg ganun ang larawang tumatambad sa amin.\n\n165\n00:11:36,190 --> 00:11:48,550\nSasalubungan kami na isang kawan ng mga batang nakayapak, hubo, uhugin, payat, bondat, pisak, galisin, na ang lahat ay nakatawa.\n\n166\n00:11:48,550 --> 00:11:57,150\nSa loob ng bahay ay ang matatanda; hukot, kulubot, uugod-ugod, na lahat ay nakatawa rin.\n\n167\n00:11:57,150 --> 00:12:05,870\nAba'y nasaan na ang mga ama't ina, binata't dalaga, tiyo at tiya? Paano ako makakakuha ng katulong nyan?\n\n168\n00:12:05,870 --> 00:12:10,210\nGanoon daw talaga yun, paliwanag ng dating naming katulong.\n\n169\n00:12:10,210 --> 00:12:15,530\nAng mga naiiwan sa bahay ay yung hindi masyadong maaasahan kumita.\n\n170\n00:12:15,530 --> 00:12:18,010\nAt yung mga nakakapagtrabaho,\n\n171\n00:12:18,010 --> 00:12:21,470\nsiyempre naroroon sa pinagtatrabahuhan.\n\n172\n00:12:21,470 --> 00:12:24,950\nGanoon daw talaga yun para mabuhay,\n\n173\n00:12:24,950 --> 00:12:28,250\nsingit ng kanyang amang naglalanggas ng sugat.\n\n174\n00:12:28,250 --> 00:12:31,130\nTingnan ko raw silang magkakamag-anak.\n\n175\n00:12:31,130 --> 00:12:33,890\nMagsaka man raw sila nang magsaka,\n\n176\n00:12:33,890 --> 00:12:38,290\nkahit silang lahat, hindi sasapat ang maaani mula sa lupa.\n\n177\n00:12:38,290 --> 00:12:42,990\nUna, tatlong ektarya lang ang lupa, hindi pa kanila.\n\n178\n00:12:42,990 --> 00:12:47,190\nTapos, mababa ang bilihin ngayon ng tabako at mais.\n\n179\n00:12:47,190 --> 00:12:50,690\nHindi sila makapagpalay dahil walang patubig.\n\n180\n00:12:50,690 --> 00:12:54,690\nAng gulay na kanilang tinatanim ay sapat lang na iulam.\n\n181\n00:12:54,690 --> 00:12:58,290\nE'yong utang pa nilang laging hindi mabayad-bayaran.\n\n182\n00:12:58,290 --> 00:13:01,890\nAt kahit pa maging santo-santito ang may-ari ng lupa,\n\n183\n00:13:01,890 --> 00:13:09,190\nhalimbawa'y, mirakulong 100 porsyento ang ibigay na kaparte nila, gahol pa rin ang kikitain.\n\n184\n00:13:09,190 --> 00:13:16,990\nKaya't ang formula nila para mabuhay: isang simpleng buhay at kayod sa trabaho, kahit anong trabaho.\n\n185\n00:13:16,990 --> 00:13:22,490\nTumango na lang ako kahit hindi ko labis na nauunawaan ang kanyang sinabi.\n\n186\n00:13:22,490 --> 00:13:28,090\nKanina ko pa gustong magtanong, natatakot lang ako na maging mabigat ang dating.\n\n187\n00:13:28,090 --> 00:13:32,090\nTuloy baka maapektuhan lang ang paghanap namin ng katulong.\n\n188\n00:13:32,090 --> 00:13:40,090\nHalimbawa, anong ibig sabihin noong mapera pa ang magbubukid samantalang halos wala na silang makain?\n\n189\n00:13:40,090 --> 00:13:45,090\nBakit kahit isang daang porsyento ang kaparte nila, kulang pa rin?\n\n190\n00:13:45,090 --> 00:13:47,090\nTumango-tango na lang ako.\n\n191\n00:13:47,090 --> 00:13:51,090\nYung pinsan niya nagsundalo bilang hanapbuhay.\n\n192\n00:13:51,090 --> 00:13:54,090\nKargador sa Maynila yung isa pa.\n\n193\n00:13:54,090 --> 00:13:59,590\nMay nag-waiter at may isang nakapag-asawa ng sirkero sa karnabal.\n\n194\n00:13:59,590 --> 00:14:05,090\nAng hirap daw sa mga ito hindi na umuuwi matapos makita ng trabaho\n\n195\n00:14:05,090 --> 00:14:08,090\nat bihira na nagpapadala ng pera.\n\n196\n00:14:08,090 --> 00:14:10,590\nHirap din daw ang mga ito.\n\n197\n00:14:10,590 --> 00:14:13,590\nAng resulta ng kanilang formula:\n\n198\n00:14:13,590 --> 00:14:17,090\nbata't matatanda na lang iyong nakikita sa baryo.\n\n199\n00:14:17,090 --> 00:14:19,090\nDi bale raw yun.\n\n200\n00:14:19,090 --> 00:14:21,590\nTatanda naman daw ang mga bata.\n\n201\n00:14:21,590 --> 00:14:27,430\nMabuti nga raw na marami ang nag-aalisan dahil umuunti ang susuportahan ng lupa.\n\n202\n00:14:27,430 --> 00:14:35,230\nE, pag sinuerte pa, baka maging janitor, mensahero, trabahador, katulong, hardinero.\n\n203\n00:14:35,230 --> 00:14:42,830\nAt kung makapag-Saudi pa. Pag minalas, pusakal, holdapper, o masamang loob,\n\n204\n00:14:42,830 --> 00:14:51,030\nmalas pero kumikita. Sabay hagalkapan ng tawa, kumayat ang laway at dahod ng bayabas na panlanggas.\n\n205\n00:14:51,030 --> 00:14:58,630\nUmaalis daw sila ng baryo para mabuhay, ipinadala niya raw ang kanyang anak para mabuhay silang lahat.\n\n206\n00:14:58,630 --> 00:15:06,710\nMasakit daw yun, anak mo't iyong pananagutan, ipinapaalila mo? Anong klase raw siyang ama?\n\n207\n00:15:06,710 --> 00:15:15,430\nDinutdot niya ang kanyang sugat, ilang nana ang marahang umagos. Kaya hindi madaling humanap ng katulong.\n\n208\n00:15:15,430 --> 00:15:22,430\nHangga't matiis ang hirap, titiisin wag lang mabawasan ang marangal na pagtingin sa sarili.\n\n209\n00:15:23,430 --> 00:15:27,430\nPero wag daw akong mag-alala, tiyak na may makukuha daw ako dyan.\n\n210\n00:15:28,430 --> 00:15:37,430\nIsang pamilyang gipit, namatayan, walang lalaki sa bahay, at yaong nagbabakasakaling makakita ng mabait na amo.\n\n211\n00:15:38,430 --> 00:15:44,430\nAt higit sa lahat, kaya na ng magulang na tanggapin ang hapdi ng pagpapaalila ng kanyang anak.\n\n212\n00:15:45,430 --> 00:15:50,430\nBaka gusto ko raw mag-ampon o magpareserba ng isang paslit?\n\n213\n00:15:50,430 --> 00:15:54,430\nPagtanda noon, tiyak may katulong na raw ako.\n\n214\n00:15:54,430 --> 00:15:56,430\nNakakuha nga ako.\n\n215\n00:15:56,430 --> 00:15:59,430\nIsang gabi'y nagdala ang dati naming katulong\n\n216\n00:15:59,430 --> 00:16:03,430\nng isang dalagitang pinagsusulsulan ng kanyang inang balo.\n\n217\n00:16:03,430 --> 00:16:06,430\nNag-Ilokanuhan sila.\n\n218\n00:16:06,430 --> 00:16:09,430\nAng akala yata'y hindi ko naiintindihan.\n\n219\n00:16:09,430 --> 00:16:13,430\nWag daw sisimangot ang bata at baka hindi siya kunin.\n\n220\n00:16:13,430 --> 00:16:17,770\nAno raw ang gusto ng bata, magutom sa bukid?\n\n221\n00:16:17,770 --> 00:16:23,570\nEh hindi na malaman ng ina kung paano pakakainin ang anim pa nitong kapatid.\n\n222\n00:16:23,570 --> 00:16:30,370\nSaka ayaw ba daw niya iyon, hindi na siya masisigaw-sigawan at mapapalo ng kanyang ina.\n\n223\n00:16:30,370 --> 00:16:38,690\nAangal sana ang bata, ngunit nagmadaling umalis ang ina, dala-dala ang paunang bayad ko para sa bata.\n\n224\n00:16:38,690 --> 00:16:49,490\nHinabol ko siya ng tingin, muling lumingon sa kanyang anak, at bagamat gabi, tumilamsik ang isang kutitap mula sa kanyang malamlam na mga mata.\n\n225\n00:16:49,490 --> 00:16:59,970\nLaging mabilis ang pag-uwi. Bukod sa mga gulay, prutas, banig Iloko, at sunog na balat, karga ko na rin ang aming katulong.\n\n226\n00:16:59,970 --> 00:17:02,190\nKarga ko rin ang kuwento.\n\n227\n00:17:02,190 --> 00:17:05,810\nMaraming katanungan tungkol sa kanilang buhay.\n\n228\n00:17:05,810 --> 00:17:09,370\nMasipag nama'y, segsag naman sa kahirapan.\n\n229\n00:17:09,370 --> 00:17:11,330\nKung kanila ang lupa,\n\n230\n00:17:11,330 --> 00:17:17,570\nang aking naitanong isang gabing may kung sinong bisita ang ama ng dati naming katudong.\n\n231\n00:17:17,570 --> 00:17:20,530\nNatawa ulit ito gaya ng dati.\n\n232\n00:17:20,530 --> 00:17:25,970\nParang nag-uudyok sa aking hanapin ko sa sarili ko ang kasagutan.\n\n233\n00:17:25,970 --> 00:17:29,970\nMalay ko, sa inagap ng aking buhay-lungsod,\n\n234\n00:17:29,970 --> 00:17:35,970\nang pagkakakilala ko sa lupa ay malayo sa pagkakakilala ko sa aspalto at semento.\n\n235\n00:17:36,970 --> 00:17:42,970\nNatawa na rin ako, kahit hindi ko lubos na nauunawaan ang gusto niyang sabihin.\n\n236\n00:17:42,970 --> 00:17:44,970\nNagtawanan kaming lahat.\n\n237\n00:17:44,970 --> 00:17:49,970\nNilingon ko ang katulong habang nakahinto kami sa trapik ng lungsod.\n\n238\n00:17:49,970 --> 00:17:53,470\nTulog na't waring pagod na sa haba ng biyahe.\n\n239\n00:17:53,470 --> 00:17:55,970\nDikit-dikit ang mga pilikmata.\n\n240\n00:17:57,470 --> 00:18:03,970\nAh, bukas, lusob na naman sa trabaho sa pagahanap ng ikabubuhay.\n\n241\n00:18:03,970 --> 00:18:07,970\nButi't may katulong na, laking ginhawa.\n\n242\n00:18:07,970 --> 00:18:13,470\nMarahil malilimutan ko agad ang mga nangyari sa paghahanap ng katulong.\n\n243\n00:18:13,470 --> 00:18:18,470\nMarahil matatagalan pa, bago ko maunawaan ang sinabi ng matanda.\n\n244\n00:18:18,470 --> 00:18:27,870\nNgunit hindi ko malilimutan ang pagtitiim bagang niya nang duddutin niya ang sugat sa paa matapos niyang sabihin wala siyang kuwentang ama.\n\n245\n00:18:27,870 --> 00:18:37,110\nAng tawanan namin nang hindi ko maunawaan ang kanyang sinabi, ang tilamsik ng liwanag sa luha ng ina ng bago naming katulong.\n\n246\n00:18:37,110 --> 00:18:43,710\nMahirap itong lungsod, laging traffic lights na lang ang nagdidikta ng abante at hinto.\n\n247\n00:18:43,710 --> 00:18:49,710\nbuti na lang at kaya ko nang ilusot ang kotse sa dagsa ng sasakyan at tao.\n\n248\n00:18:49,710 --> 00:18:55,710\nAt dito nagtatapos ang sanaysay na \"May kKtulong sa Aking Sopas.\"\n\n";
+const MUSIC_TRACKS = ["Pure Sky.mp3", "The Fading Stories - Qingce Village.mp3"];
+const LEAD = 2.4;
+const GROUP_CHARS = 380, GROUP_SECS = 20;
+window.__lead = LEAD;
+
+/* ---------------- SRT pipeline (as build_book.py) ---------------- */
+const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* keep milliseconds: splitting on '.' as well would drop them and corrupt
+   every duration */
+const tsec = t => { const p = String(t).split(/[:;,]/).map(Number);
+                    return p[0]*3600 + p[1]*60 + p[2] + (p[3] || 0)/1000; };
+const pad3 = s => String(s).slice(0,3).padEnd(3,'0');
+
+function parseSrt(text){
+  const cues = [];
+  const blocks = String(text).replace(/^\uFEFF/,'').trim().split(/\n\s*\n/);
+  const TIM = /(\d{1,2}:\d{2}:\d{2})[,.](\d+)\s*-->\s*(\d{1,2}:\d{2}:\d{2})[,.](\d+)/;
+  for(const b of blocks){
+    const lines = b.split('\n').map(l => l.trim()).filter(Boolean);
+    const ti = lines.findIndex(l => l.includes('-->'));
+    if(ti < 0) continue;
+    const m = TIM.exec(lines[ti]);
+    if(!m) continue;
+    cues.push({ s: tsec(m[1] + ',' + pad3(m[2])),
+                e: tsec(m[3] + ',' + pad3(m[4])),
+                x: lines.slice(ti + 1).join(' ').replace(/\s+/g, ' ').trim() });
+  }
+  return cues.map((c,i) => ({ id:i, s:c.s, e:c.e, x:c.x }));
+}
+
+function collapsePartial(text){
+  const keep = [];
+  for(const w of text.split(/\s+/)){
+    const k = w.replace(/[.,]+$/,'').toLowerCase();
+    const p = keep.length ? keep[keep.length-1].replace(/[.,]+$/,'').toLowerCase() : '';
+    if(p && k !== p && (k.endsWith(p) || p.endsWith(k)) &&
+       Math.abs(k.length - p.length) <= 4 && Math.min(k.length, p.length) >= 5){
+      if(w.length > keep[keep.length-1].length) keep[keep.length-1] = w;
+      continue;
+    }
+    keep.push(w);
+  }
+  return keep.join(' ').replace(/\s+/g,' ').trim();
+}
+
+function cleanCues(cues){
+  for(const c of cues){
+    const toks = c.x.split(/\s+/).filter(Boolean).map(w => {
+      const m = w.match(/^[.,?!:;"']*([^.,?!:;"']+)([.,?!:;"']*)$/);
+      if(!m) return w;
+      const core = m[1], trail = m[2], low = core.toLowerCase();
+      if(REP.SIMPLE[low]){
+        let r = REP.SIMPLE[low];
+        if(/^[A-Z]/.test(core)) r = r[0].toUpperCase() + r.slice(1);
+        return r + trail;
+      }
+      if(core.length >= 4 && REP.GLUED[low]) return REP.GLUED[low] + trail;
+      return w;
+    });
+    let text = toks.join(' ');
+    for(const a of Object.keys(REP.PHRASES)){
+      const re = new RegExp('\\b' + a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'g');
+      text = text.replace(re, () => REP.PHRASES[a]);
+    }
+    text = text.split(/\s+/).map(w => {
+      const k = w.replace(/[.,]+$/,'').toLowerCase();
+      return REP.SIMPLE[k] || w;
+    }).join(' ');
+    let prev;
+    do { prev = text; text = text.replace(/\b([A-Z][a-z]{2,})\s+\1\b/g,'$1'); } while(text !== prev);
+    c.x = collapsePartial(text);
+  }
+  for(let i = 1; i < cues.length; i++)
+    if(cues[i].s < cues[i-1].e) cues[i].s = cues[i-1].e;
+  const out = [];
+  for(const c of cues){
+    const last = out[out.length-1];
+    if(last && (c.e - c.s) < 0.7){
+      last.e = c.e;
+      last.x = (last.x.replace(/\s+$/,'') + ' ' + c.x).trim();
+    } else out.push(Object.assign({}, c));
+  }
+  return out;
+}
+
+/* consecutive cues are gathered into one flowing paragraph so the sheet reads
+   like a written scroll rather than a subtitle list */
+function groupCues(cues){
+  const groups = []; let cur = [], chars = 0;
+  for(const c of cues){
+    if(cur.length >= 2 && (chars + c.x.length > GROUP_CHARS || c.e - cur[0].s > GROUP_SECS)){
+      groups.push({ s:cur[0].s, e:cur[cur.length-1].e, x:cur.map(k=>k.x).join(' ') });
+      cur = []; chars = 0;
+    }
+    cur.push(c); chars += c.x.length + 1;
+  }
+  if(cur.length) groups.push({ s:cur[0].s, e:cur[cur.length-1].e, x:cur.map(k=>k.x).join(' ') });
+  return groups;
+}
+
+/* ---------------- state ---------------- */
+let CUES = [], GROUPS = [];
+const ts = s => { s = Math.max(0, s|0 || 0); const p=(n,w)=>String(n).padStart(w,'0');
+  return p((s/3600)|0,2)+':'+p(((s%3600)/60)|0,2)+':'+p(s%60,2); };
+
+const vid  = document.getElementById('bg'), seek = document.getElementById('seek');
+const tc   = document.getElementById('tc'), posEl = document.getElementById('pos');
+const playBtn = document.getElementById('play'), musicBtn = document.getElementById('musicBtn');
+const prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn');
+const paper = document.getElementById('paper'), parch = document.getElementById('parchment');
+window.__deps = { get groups(){ return GROUPS; }, get cues(){ return CUES; } };
+
+/* ---------------- scroll: one roll per section ---------------- */
+function measure(){
+  GROUPS.forEach((g,i) => {
+    const el = paper.children[i];
+    g.top = el ? el.offsetTop : 0;
+    g.h = el ? el.offsetHeight : 0;
+  });
+}
+
+/* A section is centred when it is short enough, otherwise its top is brought
+   just below the upper rod so the whole of it is readable as it arrives. */
+function anchorFor(i){
+  const g = GROUPS[i];
+  if(!g) return 0;
+  const pad = parseFloat(getComputedStyle(paper).paddingTop) || 40;
+  const view = parch.clientHeight;
+  if(g.h && g.h < view * 0.86){
+    /* centre it, but never above the top of the sheet */
+    const centre = g.top - (view - g.h) / 2;
+    return Math.max(0, centre - pad * 0.5);
+  }
+  return Math.max(0, g.top - pad - view * 0.12);
+}
+
+function sectionIndexAt(t){
+  let i = 0;
+  const cut = t + LEAD;
+  for(let k = 0; k < GROUPS.length; k++){ if(GROUPS[k].s <= cut) i = k; else break; }
+  return i;
+}
+
+function scrollTo(t, instant){
+  const i = sectionIndexAt(t);
+  const y = anchorFor(i);
+  if(instant){
+    paper.classList.add('notrans');
+    paper.style.transform = 'translateY(' + (-y).toFixed(2) + 'px)';
+    void paper.offsetWidth;                     /* flush, so the jump is clean */
+    paper.classList.remove('notrans');
+  }else{
+    paper.style.transform = 'translateY(' + (-y).toFixed(2) + 'px)';
+  }
+  return i;
+}
+
+function updateNav(){
+  const i = sectionIndexAt(vid.currentTime);
+  prevBtn.disabled = i <= 0;
+  nextBtn.disabled = i >= GROUPS.length - 1;
+  posEl.textContent = (i + 1) + ' / ' + GROUPS.length;
+}
+prevBtn.addEventListener('click', () => {
+  const i = Math.max(0, sectionIndexAt(vid.currentTime) - 1);
+  vid.currentTime = GROUPS[i].s + 0.01; scrollTo(vid.currentTime, true); updateNav();
+});
+nextBtn.addEventListener('click', () => {
+  const i = Math.min(GROUPS.length - 1, sectionIndexAt(vid.currentTime) + 1);
+  vid.currentTime = GROUPS[i].s + 0.01; scrollTo(vid.currentTime, true); updateNav();
+});
+
+/* ---------------- music ---------------- */
+const MUSIC = { ctx:null, master:null, els:[], gains:[], cur:0,
+                fade:3.4, ready:false, on:true, timer:null, level:0.5 };
+window.__music = MUSIC;
+
+function initMusic(){
+  if (MUSIC.ready || !MUSIC_TRACKS.length) return;
+  try{
+    MUSIC.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    MUSIC.master = MUSIC.ctx.createGain();
+    MUSIC.master.gain.value = 0;
+    MUSIC.master.connect(MUSIC.ctx.destination);
+    for(const src of MUSIC_TRACKS){
+      const a = new Audio(src);
+      a.preload = 'auto'; a.loop = false;
+      const g = MUSIC.ctx.createGain(); g.gain.value = 0;
+      MUSIC.ctx.createMediaElementSource(a).connect(g);
+      g.connect(MUSIC.master);
+      MUSIC.els.push(a); MUSIC.gains.push(g);
+    }
+    MUSIC.ready = true;
+    musicBtn.hidden = false;
+    MUSIC.timer = setInterval(musicPump, 120);
+  }catch(e){ console.warn('background music unavailable:', e && e.message); }
+}
+function ramp(param, to, secs){
+  const t = MUSIC.ctx.currentTime;
+  param.cancelScheduledValues(t);
+  param.setValueAtTime(param.value, t);
+  param.linearRampToValueAtTime(to, t + secs);
+}
+function musicPump(){
+  if(!MUSIC.ready || !MUSIC.on || vid.paused) return;
+  const i = MUSIC.cur, el = MUSIC.els[i];
+  if(!el.duration || !isFinite(el.duration)) return;
+  if(el.duration - el.currentTime > MUSIC.fade) return;
+  const j = (i + 1) % MUSIC.els.length, nx = MUSIC.els[j];
+  if(nx.paused){ nx.currentTime = 0; nx.play().catch(() => {}); }
+  ramp(MUSIC.gains[i].gain, 0, MUSIC.fade);
+  ramp(MUSIC.gains[j].gain, 1, MUSIC.fade);
+  MUSIC.cur = j;
+  setTimeout(() => { if(MUSIC.cur !== i && el.currentTime > MUSIC.fade * 2) el.pause(); }, MUSIC.fade * 2500);
+}
+function musicPlay(){
+  if(!MUSIC.ready || !MUSIC.on) return;
+  MUSIC.ctx.resume && MUSIC.ctx.resume();
+  const i = MUSIC.cur, el = MUSIC.els[i];
+  if(el.paused) el.play().catch(() => {});
+  ramp(MUSIC.gains[i].gain, 1, 1.2);
+  ramp(MUSIC.master.gain, MUSIC.level, 1.6);
+}
+function musicPause(){
+  if(!MUSIC.ready) return;
+  ramp(MUSIC.master.gain, 0, 0.5);
+  setTimeout(() => { if(vid.paused) MUSIC.els.forEach(a => a.pause()); }, 520);
+}
+musicBtn.addEventListener('click', () => {
+  MUSIC.on = !MUSIC.on;
+  musicBtn.classList.toggle('muted', !MUSIC.on);
+  if(MUSIC.on && !vid.paused) musicPlay(); else musicPause();
+});
+
+/* ---------------- boot ---------------- */
+function loadBaked(){
+  const parsed = parseSrt(BAKED_SRT);
+  if(!parsed.length) return;
+  CUES = false ? cleanCues(parsed) : parsed;
+  GROUPS = groupCues(CUES);
+  paper.innerHTML = GROUPS.map(g => '<p>' + esc(g.x) + '</p>').join('');
+  measure();
+  document.getElementById('marks').innerHTML =
+    CUES.map(c => '<span class="mk" style="left:' +
+      (c.s / (vid.duration || 1) * 100).toFixed(3) + '%"></span>').join('');
+}
+
+function tick(){
+  const t = vid.currentTime, d = vid.duration || 0;
+  if(d) seek.max = d;
+  if(!seek.matches(':active')){
+    seek.value = t;
+    seek.style.setProperty('--p', (d ? t/d*100 : 0) + '%');
+  }
+  tc.textContent = ts(t) + ' / ' + ts(d);
+  scrollTo(t);
+  updateNav();
+}
+vid.addEventListener('timeupdate', tick);
+vid.addEventListener('loadedmetadata', () => {
+  measure();
+  document.getElementById('marks').innerHTML =
+    CUES.map(c => '<span class="mk" style="left:' +
+      (c.s / (vid.duration || 1) * 100).toFixed(3) + '%"></span>').join('');
+  tick();
+});
+seek.addEventListener('input', () => {
+  vid.currentTime = +seek.value;
+  scrollTo(+seek.value, true); updateNav();
+});
+playBtn.addEventListener('click', () => vid.paused ? vid.play() : vid.pause());
+vid.addEventListener('play',  () => { playBtn.innerHTML = '&#10073;&#10073;'; musicPlay(); });
+vid.addEventListener('pause', () => { playBtn.innerHTML = '&#9654;'; musicPause(); });
+
+document.getElementById('go').addEventListener('click', () => {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('scroll').classList.add('open');
+  initMusic();
+  setTimeout(() => { scrollTo(vid.currentTime, true); }, 40);
+  vid.play().catch(() => {});
+});
+window.addEventListener('resize', () => { measure(); scrollTo(vid.currentTime, true); });
+
+const motes = document.getElementById('motes');
+for(let i = 0; i < 30; i++){
+  const m = document.createElement('div'); m.className = 'mote';
+  const sz = 1.4 + Math.random()*3.2;
+  m.style.cssText = 'width:'+sz+'px;height:'+sz+'px;left:'+(Math.random()*100)+'%;'+
+    'filter:blur('+(Math.random()*1.3).toFixed(1)+'px);'+
+    'animation-duration:'+(15+Math.random()*22)+'s;animation-delay:-'+(Math.random()*30)+'s;';
+  motes.appendChild(m);
+}
+
+loadBaked();
+tick();
+</script>
+</body>
+</html>
